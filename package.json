@@ -1,0 +1,18 @@
+{
+  "name": "lnd-mempoolspace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker:build": "docker build -t lnd-mempoolspace .",
+    "docker:run": "docker run --init -p 3000:3000 lnd-mempoolspace"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@mempool/mempool.js": "^2.3.0",
+    "express": "^4.18.2"
+  }
+}
