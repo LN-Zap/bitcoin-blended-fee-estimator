@@ -1,0 +1,38 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**/*.md'
+
+jobs:
+  publish:
+    name: Build and Publish Docker image
+    runs-on: [ arc-runner-set ]
+    env:
+      GAR_REGISTRY: us-east1-docker.pkg.dev
+      GAR_IMAGE: zap-strike-infrastructure/zap-container-registry/lnd-mempoolspace
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 'Setup Google Artifact Registry'
+        uses: LN-Zap/zap-github-actions/.github/actions/setup-google-artifact-registry@master
+        with:
+          registry: ${{ env.GAR_REGISTRY }}
+          credentials: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_ARTIFACT_REGISTRY }}
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
