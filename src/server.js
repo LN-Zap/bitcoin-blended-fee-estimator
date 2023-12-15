@@ -11,6 +11,7 @@ const feeMultiplier = config.get('mempool.feeMultiplier');
 console.log('---');
 console.log(`Using port: ${port}`);
 console.log(`Using mempool host: ${mempoolHostname}`);
+console.log(`Using mempool fee multiplier: ${feeMultiplier}`);
 console.log('---');
 
 // Initialize the Express app
