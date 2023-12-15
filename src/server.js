@@ -2,17 +2,24 @@ const config = require('config');
 const express = require('express');
 const { createServer } = require('http');
 const mempoolJS = require('@mempool/mempool.js');
+const NodeCache = require('node-cache');
 
 // Get application configuration values from the config package
 const port = config.get('server.port');
 const mempoolHostname = config.get('mempool.hostname');
 const feeMultiplier = config.get('mempool.feeMultiplier');
+const stdTTL = config.get('cache.stdTTL');
+const checkperiod = config.get('cache.checkperiod');
 
 console.log('---');
 console.log(`Using port: ${port}`);
 console.log(`Using mempool host: ${mempoolHostname}`);
 console.log(`Using mempool fee multiplier: ${feeMultiplier}`);
+console.log(`Using cache stdTTL: ${stdTTL}`);
+console.log(`Using cache checkperiod: ${checkperiod}`);
 console.log('---');
+
+const myCache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
 
 // Initialize the Express app
 const app = express();
@@ -45,24 +52,40 @@ const mempool = mempoolJS({
  */
 app.get('/v1/fee-estimates.json', async (req, res) => {
   try {
-    // Fetch the current block hash
-    const { bitcoin: { blocks } } = mempool;
-    const blocksTipHash = await blocks.getBlocksTipHash();
-    
-    // Fetch fee estimates
-    const { bitcoin: { fees } } = mempool;
-    const feeEstimates = await fees.getFeesMempoolBlocks();
+    // Check if the response is cached.
+    let data = myCache.get('data');
 
-    // Transform the fee estimates to match the desired format
-    let feeByBlockTarget = {};
-    feeEstimates.forEach((estimate, index) => {
-      feeByBlockTarget[index + 1] = Math.round(estimate.medianFee * 1000 * feeMultiplier)
-    });
+    // If the response is not cached, fetch it from the mempool.space API.
+    if (!data) {
+      // Fetch the current block hash.
+      const { bitcoin: { blocks } } = mempool;
+      const blocksTipHash = await blocks.getBlocksTipHash();
 
-    res.json({
-      current_block_hash: blocksTipHash,
-      fee_by_block_target: feeByBlockTarget
-    });
+      // Fetch fee estimates.
+      const { bitcoin: { fees } } = mempool;
+      const feeEstimates = await fees.getFeesMempoolBlocks();
+
+      // Transform the fee estimates to match the desired format.
+      const feeByBlockTarget = {};
+      feeEstimates.forEach((estimate, index) => {
+        feeByBlockTarget[index + 1] = Math.round(estimate.medianFee * 1000 * feeMultiplier)
+      });
+
+      // Create the response object.
+      data = {
+        current_block_hash: blocksTipHash,
+        fee_by_block_target: feeByBlockTarget
+      };
+
+      // Cache the response object.
+      myCache.set('data', data);
+    }
+
+    // Set cache headers
+    res.set('Cache-Control', `public, max-age=${stdTTL}`);
+
+    // Send the response.
+    res.json(data);
   } catch (error) {
     console.error(error);
     res.status(500).send('Error fetching fee estimates');

@@ -8,13 +8,20 @@
     "docker:build": "docker build -t lnd-mempoolspace .",
     "docker:run": "docker run --init -p 3000:3000 lnd-mempoolspace"
   },
-  "keywords": ["lnd", "mempool.space", "bitcoin", "blockchain", "fee estimates"],
+  "keywords": [
+    "lnd",
+    "mempool.space",
+    "bitcoin",
+    "blockchain",
+    "fee estimates"
+  ],
   "author": "Tom Kirkpatrick <tom@strike.me> (https://twitter.com/mrfelton)",
   "license": "MIT",
   "dependencies": {
     "@mempool/mempool.js": "2.3.0",
     "config": "3.3.9",
-    "express": "4.18.2"
+    "express": "4.18.2",
+    "node-cache": "5.1.2"
   },
   "engines": {
     "node": ">=14.0.0"
