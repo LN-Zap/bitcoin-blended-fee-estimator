@@ -1,6 +1,6 @@
 # Lnd Mempool.Space Integration
 
-This project aims to integrate the Lightning Network Daemon (lnd) with mempool.space, a Bitcoin blockchain explorer. The primary feature of this integration is to provide fee estimates to lnd based on the fee estimates from mempool.space.
+This project aims to integrate the [Lightning Network Daemon (lnd)](https://github.com/lightningnetwork/lnd) with [mempool.space](https://mempool.space/), a Bitcoin blockchain explorer. The primary feature of this integration is to provide fee estimates to lnd based on the fee estimates from mempool.space.
 
 ## Features
 
@@ -10,11 +10,13 @@ This project aims to integrate the Lightning Network Daemon (lnd) with mempool.s
 
 1. Clone this repository to your local machine.
 2. Install the necessary dependencies.
-3. Set the feeurl in your lnd configuration to point to the /fee-estimates endpoint of this server.
+3. Set the `feeurl` in your lnd configuration to point to the `/fee-estimates` endpoint of this server.
 
 For example:
 
-```
+```ini
+[Application Options]
+
 feeurl = http://localhost:3000/fee-estimates
 ```
 
@@ -28,7 +30,7 @@ In addition, you may need to adjust the settings of your mempool.space instance 
 
 ## Configuration Options
 
-This project uses the `config` package for configuration. The configuration options are stored in `default.json` and `custom-environment-variables.json` in the `config` directory.
+This project uses the [`config`](https://www.npmjs.com/package/config) package for configuration. The configuration options are stored in `default.json` and `custom-environment-variables.json` in the `config` directory.
 
 Here are the available configuration options:
 
@@ -85,7 +87,7 @@ Once the release is published, the Docker build and push process will start auto
 Please note that you need to have the necessary permissions to create a release and push to Docker Hub.
 
 ## Contributing
-We welcome contributions to this project. Please feel free to open an issue or submit a pull request.
+We welcome contributions to this project. Please feel free to open an [issue](https://github.com/LN-Zap/lnd-mempoolspace/issues) or submit a [pull request](https://github.com/LN-Zap/lnd-mempoolspace/pulls).
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for more details.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE.md) file for more details.
