@@ -66,7 +66,7 @@ PORT=4000 MEMPOOL_HOSTNAME=localhost npm start
 This project includes Docker support and an official Docker image is available. You can run the Docker image with the following command:
 
 ```bash
-docker run -p 3000:3000 lnzap/lnd-mempoolspace:1.0.0
+docker run -p 3000:3000 lnzap/lnd-mempoolspace:latest
 ```
 
 This command will pull the latest `lnzap/lnd-mempoolspace` image from Docker Hub and run it. By default, the Docker image runs the server on port 3000.
