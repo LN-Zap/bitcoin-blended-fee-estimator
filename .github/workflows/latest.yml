@@ -1,4 +1,4 @@
-name: Deploy
+name: Latest
 
 on:
   push:
@@ -9,11 +9,12 @@ on:
 
 jobs:
   publish:
-    name: Build and Publish Docker image
     runs-on: [ arc-runner-set ]
+
     env:
       GAR_REGISTRY: us-east1-docker.pkg.dev
       GAR_IMAGE: zap-strike-infrastructure/zap-container-registry/lnd-mempoolspace
+
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4
 
@@ -32,7 +33,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:latest
+          tags: ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
