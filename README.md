@@ -9,7 +9,7 @@ This project aims to integrate the [Lightning Network Daemon (lnd)](https://gith
 ## Setup & Usage
 
 1. Clone this repository to your local machine.
-2. Install the necessary dependencies.
+2. Install the necessary dependencies (`npm install`)
 3. Set the `feeurl` in your lnd configuration to point to the `/v1/fee-estimates.json` endpoint of this server.
 
 For example:
@@ -59,7 +59,19 @@ PORT=4000 MEMPOOL_HOSTNAME=localhost npm start
 
 ## Docker
 
-This project includes Docker support. You can build a Docker image and run it with the following scripts:
+This project includes Docker support and an official Docker image is available. You can run the Docker image with the following command:
+
+```bash
+docker run lnzap/lnd-mempoolspace
+```
+
+This command will pull the latest `lnzap/lnd-mempoolspace` image from Docker Hub and run it. By default, the Docker image runs the server on port 3000.
+
+Please ensure that Docker is installed and running on your machine before running these commands.
+
+### Docker Development
+
+You can build a Docker image from the source and run it with the following scripts:
 
 - `docker:build`: Builds a Docker image of the project. You can run this script with `npm run docker:build`.
 - `docker:run`: Runs the Docker image. You can run this script with `npm run docker:run`.
@@ -69,12 +81,6 @@ For example, to build and run the Docker image, you can use the following comman
 ```bash
 npm run docker:build
 npm run docker:run
-```
-
-To run the Docker image with custom configuration, you can use the following command:
-
-```bash
-docker run --init -p 3000:3000 -e MEMPOOL_HOSTNAME=my.mempool.space lnd-mempoolspace
 ```
 
 ## Releasing
