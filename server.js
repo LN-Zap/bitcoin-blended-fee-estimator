@@ -1,13 +1,40 @@
+const config = require('config');
 const express = require('express');
+const { createServer } = require('http');
 const mempoolJS = require('@mempool/mempool.js');
 
+// Get application configuration values from the config package
+const port = config.get('server.port');
+
+// Initialize the Express app
 const app = express();
-const port = 3000;
+
+// Start the server and log the URL to the console
+const server = createServer(app).listen(port, function() {
+  console.log(`Server started on http://localhost:${port}`);
+});
+
+// Enable JSON and URL-encoded request bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Add a health/ready endpoint
+app.get('/health/ready', (req, res) => {
+  return res.sendStatus(200);
+});
+
+// Add a health/live endpoint
+app.get('/health/live', (req, res) => {
+  return res.sendStatus(200);
+});
 
 const mempool = mempoolJS({
   hostname: 'mempool.space'
 });
 
+/**
+ * Returns the current fee estimates for the Bitcoin network.
+ */
 app.get('/fee-estimates', async (req, res) => {
   try {
     // Fetch the current block hash
@@ -34,6 +61,22 @@ app.get('/fee-estimates', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+// Error handling middleware
+app.use(function(err, req, res, next) {
+  // Handle HTTP errors using http-errors
+  if (err instanceof createError.HttpError) {
+    res.status(err.statusCode).send(err.message);
+  } else {
+    // Log the error to the console and send a generic error response back to the client
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Handle SIGINT signal
+process.on('SIGINT', () => {
+  server.close(() => {
+    console.log('Server has been gracefully shut down');
+    process.exit(0);
+  });
 });
