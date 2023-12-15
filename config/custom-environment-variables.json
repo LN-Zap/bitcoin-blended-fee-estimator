@@ -3,6 +3,7 @@
         "port": "PORT"
     },
     "mempool": {
-        "hostname": "MEMPOOL_HOSTNAME"
+        "hostname": "MEMPOOL_HOSTNAME",
+        "feeMultiplier": "MEMPOOL_FEE_MULTIPLIER"
     }
 }

@@ -6,6 +6,7 @@ const mempoolJS = require('@mempool/mempool.js');
 // Get application configuration values from the config package
 const port = config.get('server.port');
 const mempoolHostname = config.get('mempool.hostname');
+const feeMultiplier = config.get('mempool.feeMultiplier');
 
 console.log('---');
 console.log(`Using port: ${port}`);
@@ -54,7 +55,7 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
     // Transform the fee estimates to match the desired format
     let feeByBlockTarget = {};
     feeEstimates.forEach((estimate, index) => {
-      feeByBlockTarget[index + 1] = Math.round(estimate.medianFee * 1000 * 1.05)
+      feeByBlockTarget[index + 1] = Math.round(estimate.medianFee * 1000 * feeMultiplier)
     });
 
     res.json({
