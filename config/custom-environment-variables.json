@@ -1,5 +1,8 @@
 {
     "server": {
         "port": "PORT"
+    },
+    "mempool": {
+        "hostname": "MEMPOOL_HOSTNAME"
     }
 }

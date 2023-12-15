@@ -5,6 +5,12 @@ const mempoolJS = require('@mempool/mempool.js');
 
 // Get application configuration values from the config package
 const port = config.get('server.port');
+const mempoolHostname = config.get('mempool.hostname');
+
+console.log('---');
+console.log(`Using port: ${port}`);
+console.log(`Using mempool host: ${mempoolHostname}`);
+console.log('---');
 
 // Initialize the Express app
 const app = express();
@@ -29,7 +35,7 @@ app.get('/health/live', (req, res) => {
 });
 
 const mempool = mempoolJS({
-  hostname: 'mempool.space'
+  hostname: mempoolHostname
 });
 
 /**

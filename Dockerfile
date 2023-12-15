@@ -14,7 +14,8 @@ COPY package*.json ./
 RUN npm install --omit dev
 
 # Copy the rest of the app source code to the container
-COPY . .
+COPY src src
+COPY config config
 
 # Change ownership of the app directory to the non-root user
 RUN chown -R app:app /app
@@ -25,6 +26,9 @@ USER app
 # Set the port
 ENV PORT=3000
 
+# Set the mempool.space hostname
+ENV MEMPOOL_HOSTNAME=mempool.space
+
 # Expose the port that the app is listening on
 EXPOSE $PORT
 
@@ -32,4 +36,4 @@ EXPOSE $PORT
 ENV NODE_ENV production
 
 # Start the app
-CMD [ "node", "server.js" ]
+CMD [ "node", "src/server.js" ]

@@ -1,5 +1,8 @@
 {
     "server": {
         "port": 3000
+    },
+    "mempool": {
+        "hostname": "mempool.space"
     }
 }

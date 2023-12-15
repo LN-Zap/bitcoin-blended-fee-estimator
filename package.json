@@ -1,18 +1,22 @@
 {
   "name": "lnd-mempoolspace",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "Integration between Lightning Network Daemon (lnd) and mempool.space for Bitcoin fee estimates",
+  "main": "src/server.js",
   "scripts": {
+    "start": "node src/server.js",
     "docker:build": "docker build -t lnd-mempoolspace .",
     "docker:run": "docker run --init -p 3000:3000 lnd-mempoolspace"
   },
-  "keywords": [],
+  "keywords": ["lnd", "mempool.space", "bitcoin", "blockchain", "fee estimates"],
   "author": "Tom Kirkpatrick <tom@strike.me> (https://twitter.com/mrfelton)",
   "license": "MIT",
   "dependencies": {
     "@mempool/mempool.js": "2.3.0",
     "config": "3.3.9",
     "express": "4.18.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
