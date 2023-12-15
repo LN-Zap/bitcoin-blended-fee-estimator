@@ -8,8 +8,8 @@
     "docker:run": "docker run --init -p 3000:3000 lnd-mempoolspace"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Tom Kirkpatrick <tom@strike.me> (https://twitter.com/mrfelton)",
+  "license": "MIT",
   "dependencies": {
     "@mempool/mempool.js": "2.3.0",
     "config": "3.3.9",
