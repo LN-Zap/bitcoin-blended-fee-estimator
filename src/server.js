@@ -41,7 +41,7 @@ const mempool = mempoolJS({
 /**
  * Returns the current fee estimates for the Bitcoin network.
  */
-app.get('/fee-estimates', async (req, res) => {
+app.get('/v1/fee-estimates.json', async (req, res) => {
   try {
     // Fetch the current block hash
     const { bitcoin: { blocks } } = mempool;

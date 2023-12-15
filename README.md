@@ -10,14 +10,21 @@ This project aims to integrate the [Lightning Network Daemon (lnd)](https://gith
 
 1. Clone this repository to your local machine.
 2. Install the necessary dependencies.
-3. Set the `feeurl` in your lnd configuration to point to the `/fee-estimates` endpoint of this server.
+3. Set the `feeurl` in your lnd configuration to point to the `/v1/fee-estimates.json` endpoint of this server.
 
 For example:
 
 ```ini
 [Application Options]
 
-feeurl = http://localhost:3000/fee-estimates
+; Optional URL for external fee estimation. If no URL is specified, the method
+; for fee estimation will depend on the chosen backend and network. Must be set
+; for neutrino on mainnet.
+; Default:
+;   feeurl=
+; Example:
+;   feeurl=https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json
+feeurl = http://localhost:3000/v1/fee-estimates.json
 ```
 
 Replace http://localhost:3000 with the address of your server.
