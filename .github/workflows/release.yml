@@ -5,7 +5,7 @@ on:
     types: [ "published" ]
 
 jobs:
-  docker:
+  publish:
     runs-on: "ubuntu-latest"
 
     env:
