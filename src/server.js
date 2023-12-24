@@ -55,30 +55,40 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
     // Check if the response is cached.
     let data = myCache.get('data');
 
-    // If the response is not cached, fetch it from the mempool.space API.
+    // If the response is not cached, fetch it .
     if (!data) {
       // Fetch the current block hash.
       const { bitcoin: { blocks } } = mempool;
       const blocksTipHash = await blocks.getBlocksTipHash();
 
-      // Fetch fee estimates.
+      // Fetch fee estimates from mempool.space API.
       const { bitcoin: { fees } } = mempool;
       const feeEstimates = await fees.getFeesRecommended();
-      const mempoolBlocks = await fees.getFeesMempoolBlocks();
 
-      const minFee = feeEstimates.minimumFee * feeMultiplier;
+      // Fetch fee estimates from Blockstream API.
+      const blockstreamFeeEstimates = await fetch('https://blockstream.info/api/fee-estimates');
+      const blockstreamFees = await blockstreamFeeEstimates.json();
 
-      // Transform the fee estimates to match the desired format.
+      // Get the minimum fee from mempool.space (we use their economy rate).
+      const minFee = feeEstimates.economyFee;
+
+      // Use mempool.space fee estimates for upcoming blocks.
       const feeByBlockTarget = {
         1: Math.round(feeEstimates.fastestFee * 1000 * feeMultiplier),
         2: Math.round(feeEstimates.halfHourFee * 1000 * feeMultiplier), // usually between first and second block
         3: Math.round(feeEstimates.hourFee * 1000 * feeMultiplier), // usually between second and third block
-        36: Math.max(Math.round(mempoolBlocks[2].medianFee * 1000 * feeMultiplier), minFee), // 6 hours to get 3 blocks deep
-        72: Math.max(Math.round(mempoolBlocks[4].medianFee * 1000 * feeMultiplier), minFee), // 12 hours to get 5 blocks deep
-        144: Math.max(Math.round(mempoolBlocks[6].medianFee * 1000 * feeMultiplier), minFee), // 24 hours to get 7 blocks deep
-        720: Math.round(feeEstimates.economyFee * 1000 * feeMultiplier), // 5 days to get to 2x above economy
-        1008: Math.round(feeEstimates.minimumFee * 1000 * feeMultiplier) // 7 days to get to the minimum fee
       };
+
+      // Calculate the minimum fee from the feeByBlockTarget object.
+      const minMempoolFee = Math.min(...Object.values(feeByBlockTarget));
+
+      // Merge Blockstream fee estimates into feeByBlockTarget.
+      for (const [blockTarget, fee] of Object.entries(blockstreamFees)) {
+        const adjustedFee = Math.round(fee * 1000);
+        if (!feeByBlockTarget.hasOwnProperty(blockTarget) && adjustedFee < minMempoolFee) {
+          feeByBlockTarget[blockTarget] = adjustedFee;
+        }
+      }
 
       // Create the response object.
       data = {
