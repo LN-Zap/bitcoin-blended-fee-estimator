@@ -63,13 +63,22 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
 
       // Fetch fee estimates.
       const { bitcoin: { fees } } = mempool;
-      const feeEstimates = await fees.getFeesMempoolBlocks();
+      const feeEstimates = await fees.getFeesRecommended();
+      const mempoolBlocks = await fees.getFeesMempoolBlocks();
+
+      const minFee = feeEstimates.minimumFee * feeMultiplier;
 
       // Transform the fee estimates to match the desired format.
-      const feeByBlockTarget = {};
-      feeEstimates.forEach((estimate, index) => {
-        feeByBlockTarget[index + 1] = Math.round(estimate.medianFee * 1000 * feeMultiplier)
-      });
+      const feeByBlockTarget = {
+        1: Math.round(feeEstimates.fastestFee * 1000 * feeMultiplier),
+        2: Math.round(feeEstimates.halfHourFee * 1000 * feeMultiplier), // usually between first and second block
+        3: Math.round(feeEstimates.hourFee * 1000 * feeMultiplier), // usually between second and third block
+        36: Math.max(Math.round(mempoolBlocks[2].medianFee * 1000 * feeMultiplier), minFee), // 6 hours to get 3 blocks deep
+        72: Math.max(Math.round(mempoolBlocks[4].medianFee * 1000 * feeMultiplier), minFee), // 12 hours to get 5 blocks deep
+        144: Math.max(Math.round(mempoolBlocks[6].medianFee * 1000 * feeMultiplier), minFee), // 24 hours to get 7 blocks deep
+        720: Math.round(feeEstimates.economyFee * 1000 * feeMultiplier), // 5 days to get to 2x above economy
+        1008: Math.round(feeEstimates.minimumFee * 1000 * feeMultiplier) // 7 days to get to the minimum fee
+      };
 
       // Create the response object.
       data = {
