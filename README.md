@@ -1,10 +1,34 @@
 # Lnd Mempool.Space Integration
 
-This project aims to integrate the [Lightning Network Daemon (lnd)](https://github.com/lightningnetwork/lnd) with [mempool.space](https://mempool.space/), a Bitcoin blockchain explorer. The primary feature of this integration is to provide fee estimates to lnd based on the fee estimates from mempool.space.
+This project aims to integrate the [Lightning Network Daemon (lnd)](https://github.com/lightningnetwork/lnd) with [mempool.space](https://mempool.space/), a Bitcoin blockchain explorer. The primary feature of this integration is to provide fee estimates to lnd based on a combination of mempool-based estimates (from the mempool.space API) and history-based estimates (from the Blockstream API).
 
-## Features
+## Fee Estimates
 
-- Fee Estimates: The integration fetches fee estimates from mempool.space and provides them to lnd.
+This application uses two APIs to get fee estimates for Bitcoin transactions:
+
+- [**mempool.space API**](https://mempool.space/docs/api/rest): This API is used to get mempool-based fee estimates for upcoming blocks. The application fetches the fastestFee, halfHourFee, hourFee, economyFee, and minimumFee from the mempool.space API and uses these estimates to calculate the fee for upcoming blocks. The application also multiplies these estimates by a configurable multiplier to ensure that can be used to ensure that the fee estimates are always slightly higher or lower than the mempool.space estimates.
+
+- [**Blockstream API**](https://github.com/Blockstream/esplora/blob/master/API.md): This API is used to get history-based fee estimates for further future blocks. The application fetches the fee estimates from the Blockstream API (which gets its data from bitcoind) and adds them to the fee estimates if they are lower than the lowest fee estimate from the mempool.space API.
+
+Fee estimates are cached for a configurable amount of time (15 seconds by default) to reduce the number of API calls. The cache is automatically cleared after the configured time has elapsed.
+
+## API
+
+This application exposes a single API endpoint at `/v1/fee-estimates.json`. This endpoint returns a JSON object with the following structure, which is compatible with the LND's `feeurl` setting:
+
+```json
+{
+    "current_block_hash": "0000000000000000000044ab897830778c73d33fdeddde1f21e875fae2150378",
+    "fee_by_block_target": {
+        "1": 81900,
+        "2": 78750,
+        "3": 74550,
+        "144": 64951,
+        "504": 53464,
+        "1008": 28175
+    }
+}
+```
 
 ## Setup & Usage
 
