@@ -6,6 +6,9 @@
         "hostname": "mempool.space",
         "feeMultiplier": 1.05
     },
+    "blockstream": {
+        "hostname": "blockstream.info"
+    },
     "cache": {
         "stdTTL": 15,
         "checkperiod": 20

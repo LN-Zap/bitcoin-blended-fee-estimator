@@ -6,6 +6,9 @@
         "hostname": "MEMPOOL_HOSTNAME",
         "feeMultiplier": "MEMPOOL_FEE_MULTIPLIER"
     },
+    "blockstream": {
+        "hostname": "BLOCKSTREAM_HOSTNAME"
+    },
     "cache": {
         "stdTTL": "CACHE_STD_TTL",
         "checkperiod": "CACHE_CHECKPERIOD"
