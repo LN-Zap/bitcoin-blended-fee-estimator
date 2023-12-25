@@ -23,13 +23,6 @@ RUN chown -R app:app /app
 # Switch to the non-root user
 USER app
 
-# Expose env vars. These can be overridden at runtime.
-ENV PORT=3000
-ENV MEMPOOL_HOSTNAME=mempool.space
-ENV MEMPOOL_FEE_MULTIPLIER=1.05
-ENV CACHE_STDTTL=15
-ENV CACHE_CHECKPERIOD=20
-
 # Expose the port that the app is listening on
 EXPOSE $PORT
 

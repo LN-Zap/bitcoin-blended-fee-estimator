@@ -18,7 +18,6 @@
   "author": "Tom Kirkpatrick <tom@strike.me> (https://twitter.com/mrfelton)",
   "license": "MIT",
   "dependencies": {
-    "@mempool/mempool.js": "2.3.0",
     "config": "3.3.9",
     "express": "4.18.2",
     "node-cache": "5.1.2"

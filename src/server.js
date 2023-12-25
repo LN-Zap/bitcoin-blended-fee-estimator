@@ -1,12 +1,12 @@
 const config = require('config');
 const express = require('express');
 const { createServer } = require('http');
-const mempoolJS = require('@mempool/mempool.js');
 const NodeCache = require('node-cache');
 
 // Get application configuration values from the config package
 const port = config.get('server.port');
 const mempoolHostname = config.get('mempool.hostname');
+const blockstreamHostname = config.get('blockstream.hostname');
 const feeMultiplier = config.get('mempool.feeMultiplier');
 const stdTTL = config.get('cache.stdTTL');
 const checkperiod = config.get('cache.checkperiod');
@@ -14,6 +14,7 @@ const checkperiod = config.get('cache.checkperiod');
 console.log('---');
 console.log(`Using port: ${port}`);
 console.log(`Using mempool host: ${mempoolHostname}`);
+console.log(`Using blockstream host: ${blockstreamHostname}`);
 console.log(`Using mempool fee multiplier: ${feeMultiplier}`);
 console.log(`Using cache stdTTL: ${stdTTL}`);
 console.log(`Using cache checkperiod: ${checkperiod}`);
@@ -43,10 +44,6 @@ app.get('/health/live', (req, res) => {
   return res.sendStatus(200);
 });
 
-const mempool = mempoolJS({
-  hostname: mempoolHostname
-});
-
 /**
  * Returns the current fee estimates for the Bitcoin network.
  */
@@ -57,36 +54,61 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
 
     // If the response is not cached, fetch it .
     if (!data) {
+      let blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates, feeByBlockTarget = {};
+
       // Fetch the current block hash.
-      const { bitcoin: { blocks } } = mempool;
-      const blocksTipHash = await blocks.getBlocksTipHash();
+      try {
+        const response = await fetch(`https://${mempoolHostname}/api/blocks/tip/hash`);
+        blocksTipHash = await response.text();
+      } catch (error) {
+        console.error(`Error fetching block tip hash from ${mempoolHostname}:`, error);
+
+        try {
+          const response = await fetch(`https://${blockstreamHostname}/api/blocks/tip/hash`);
+          blocksTipHash = await response.text();
+        } catch (error) {
+          console.error(`Error fetching block tip hash from ${blockstreamHostname}:`, error);
+        }
+      }
 
       // Fetch fee estimates from mempool.space API.
-      const { bitcoin: { fees } } = mempool;
-      const feeEstimates = await fees.getFeesRecommended();
+      try {
+        const response = await fetch(`https://${mempoolHostname}/api/v1/fees/recommended`);
+        mempoolFeeEstimates = await response.json();
+      } catch (error) {
+        console.error(`Error fetching fee estimates from ${mempoolHostname}:`, error);
+      }
 
       // Fetch fee estimates from Blockstream API.
-      const blockstreamFeeEstimates = await fetch('https://blockstream.info/api/fee-estimates');
-      const blockstreamFees = await blockstreamFeeEstimates.json();
+      try {
+        const response = await fetch(`https://${blockstreamHostname}/api/fee-estimates`);
+        blockstreamFeeEstimates = await response.json();
+      } catch (error) {
+        console.error(`Error fetching fee estimates from ${blockstreamHostname}:`, error);
+      }
 
       // Get the minimum fee from mempool.space (we use their economy rate).
-      const minFee = feeEstimates.economyFee;
+      const minFee = mempoolFeeEstimates?.economyFee;
 
       // Use mempool.space fee estimates for upcoming blocks.
-      const feeByBlockTarget = {
-        1: Math.round(feeEstimates.fastestFee * 1000 * feeMultiplier),
-        2: Math.round(feeEstimates.halfHourFee * 1000 * feeMultiplier), // usually between first and second block
-        3: Math.round(feeEstimates.hourFee * 1000 * feeMultiplier), // usually between second and third block
-      };
+      if (mempoolFeeEstimates) {
+        feeByBlockTarget = {
+          1: Math.round(mempoolFeeEstimates.fastestFee * 1000 * feeMultiplier),
+          2: Math.round(mempoolFeeEstimates.halfHourFee * 1000 * feeMultiplier), // usually between first and second block
+          3: Math.round(mempoolFeeEstimates.hourFee * 1000 * feeMultiplier), // usually between second and third block
+        };
+      }
 
       // Calculate the minimum fee from the feeByBlockTarget object.
       const minMempoolFee = Math.min(...Object.values(feeByBlockTarget));
 
       // Merge Blockstream fee estimates into feeByBlockTarget.
-      for (const [blockTarget, fee] of Object.entries(blockstreamFees)) {
-        const adjustedFee = Math.round(fee * 1000);
-        if (!feeByBlockTarget.hasOwnProperty(blockTarget) && adjustedFee < minMempoolFee) {
-          feeByBlockTarget[blockTarget] = adjustedFee;
+      if (blockstreamFeeEstimates) {
+        for (const [blockTarget, fee] of Object.entries(blockstreamFeeEstimates)) {
+          const adjustedFee = Math.round(fee * 1000);
+          if (!feeByBlockTarget.hasOwnProperty(blockTarget) && adjustedFee < minMempoolFee) {
+            feeByBlockTarget[blockTarget] = adjustedFee;
+          }
         }
       }
 

@@ -68,6 +68,7 @@ Here are the available configuration options:
 - `server.port`: The port on which the server runs. Default is `3000`.
 - `mempool.hostname`: The hostname of the mempool.space instance to connect to. Default is `mempool.space`.
 - `mempool.feeMultiplier`: The multiplier to apply to the mempool.space fee estimates. Default is `1.05`. (This is used to ensure that the fee estimates are always slightly higher than the mempool.space estimates.)
+- `blockstream.hostname`: The hostname of the Blockstream API instance to connect to. Default is `blockstream.api`.
 - `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`.
 - `cache.checkperiod`: The period in seconds, used for the automatic delete check interval. Default is `20`.
 
@@ -76,6 +77,7 @@ You can override these options by setting the corresponding environment variable
 - `PORT`: Overrides `server.port`.
 - `MEMPOOL_HOSTNAME`: Overrides `mempool.hostname`.
 - `MEMPOOL_FEE_MULTIPLIER`: Overrides `mempool.feeMultiplier`.
+- `BLOCKSTREAM_HOSTNAME`: Overrides `blockstream.hostname`.
 - `CACHE_STDTTL`: Overrides `cache.stdTTL`.
 - `CACHE_CHECKPERIOD`: Overrides `cache.checkperiod`.
 
