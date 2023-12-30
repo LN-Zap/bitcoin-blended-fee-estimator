@@ -2,9 +2,12 @@
     "server": {
         "port": "PORT"
     },
+    "settings": {
+        "feeMultiplier": "FEE_MULTIPLIER"
+    },
     "mempool": {
         "hostname": "MEMPOOL_HOSTNAME",
-        "feeMultiplier": "MEMPOOL_FEE_MULTIPLIER"
+        "depth": "MEMPOOL_DEPTH"
     },
     "blockstream": {
         "hostname": "BLOCKSTREAM_HOSTNAME"
