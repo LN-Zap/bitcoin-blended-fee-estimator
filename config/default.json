@@ -2,9 +2,12 @@
     "server": {
         "port": 3000
     },
+    "settings": {
+        "feeMultiplier": 1.05
+    },
     "mempool": {
         "hostname": "mempool.space",
-        "feeMultiplier": 1.05
+        "depth": 3
     },
     "blockstream": {
         "hostname": "blockstream.info"

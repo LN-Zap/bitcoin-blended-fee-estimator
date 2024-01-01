@@ -5,17 +5,19 @@ const NodeCache = require('node-cache');
 
 // Get application configuration values from the config package
 const port = config.get('server.port');
-const mempoolHostname = config.get('mempool.hostname');
 const blockstreamHostname = config.get('blockstream.hostname');
-const feeMultiplier = config.get('mempool.feeMultiplier');
+const mempoolHostname = config.get('mempool.hostname');
+const mempoolDepth = config.get('mempool.depth');
+const feeMultiplier = config.get('settings.feeMultiplier');
 const stdTTL = config.get('cache.stdTTL');
 const checkperiod = config.get('cache.checkperiod');
 
 console.log('---');
 console.log(`Using port: ${port}`);
-console.log(`Using mempool host: ${mempoolHostname}`);
 console.log(`Using blockstream host: ${blockstreamHostname}`);
-console.log(`Using mempool fee multiplier: ${feeMultiplier}`);
+console.log(`Using mempool host: ${mempoolHostname}`);
+console.log(`Using mempool depth: ${mempoolDepth}`);
+console.log(`Using fee multiplier: ${feeMultiplier}`);
 console.log(`Using cache stdTTL: ${stdTTL}`);
 console.log(`Using cache checkperiod: ${checkperiod}`);
 console.log('---');
@@ -92,11 +94,17 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
 
       // Use mempool.space fee estimates for upcoming blocks.
       if (mempoolFeeEstimates) {
-        feeByBlockTarget = {
-          1: Math.round(mempoolFeeEstimates.fastestFee * 1000 * feeMultiplier),
-          2: Math.round(mempoolFeeEstimates.halfHourFee * 1000 * feeMultiplier), // usually between first and second block
-          3: Math.round(mempoolFeeEstimates.hourFee * 1000 * feeMultiplier), // usually between second and third block
+        const blockTargetMapping = {
+          1: 'fastestFee',
+          3: 'halfHourFee',
+          6: 'hourFee'
         };
+        for (let i = 1; i <= mempoolDepth; i++) {
+          const feeProperty = blockTargetMapping[i];
+          if (feeProperty && mempoolFeeEstimates[feeProperty]) {
+            feeByBlockTarget[i] = Math.round(mempoolFeeEstimates[feeProperty] * 1000 * feeMultiplier);
+          }
+        }
       }
 
       // Calculate the minimum fee from the feeByBlockTarget object.
@@ -105,7 +113,7 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
       // Merge Blockstream fee estimates into feeByBlockTarget.
       if (blockstreamFeeEstimates) {
         for (const [blockTarget, fee] of Object.entries(blockstreamFeeEstimates)) {
-          const adjustedFee = Math.round(fee * 1000);
+          const adjustedFee = Math.round(fee * 1000 * feeMultiplier);
           if (!feeByBlockTarget.hasOwnProperty(blockTarget) && adjustedFee < minMempoolFee) {
             feeByBlockTarget[blockTarget] = adjustedFee;
           }
