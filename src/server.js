@@ -34,20 +34,47 @@ const myCache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
  * @returns {Promise<Response>} - The fetch Response object.
  * @throws {Error} - Throws an error if the fetch request times out or if any other error occurs.
  */
-async function fetchWithTimeout(url, timeout = 5000) {
+async function fetchWithTimeout(url, timeout = TIMEOUT) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
+
+  console.debug(`Starting fetch request to ${url}`);
 
   try {
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(id);
+
+    console.debug(`Successfully fetched data from ${url}`);
     return response;
   } catch (error) {
     if (error.name === 'AbortError') {
+      console.error(`Fetch request to ${url} timed out after ${timeout} ms`);
       throw new Error(`Request timed out after ${timeout} ms`);
     } else {
+      console.error(`Error fetching data from ${url}:`, error);
       throw error;
     }
+  }
+}
+
+/**
+ * Fetches a URL with a specified timeout and handles the response.
+ *
+ * @param {string} url - The URL to fetch.
+ * @returns {Promise<string|object|null>} - The response data parsed as JSON or text, or null if an error occurs.
+ */
+async function fetchAndHandle(url) {
+  try {
+    const response = await fetchWithTimeout(url, TIMEOUT);
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    } else {
+      return await response.text();
+    }
+  } catch (error) {
+    console.error(`Error fetching from ${url}:`, error);
+    return null;
   }
 }
 
@@ -85,36 +112,21 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
     if (!data) {
       let blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates, feeByBlockTarget = {};
 
-      // Fetch the current block hash.
-      try {
-        const response = await fetchWithTimeout(`https://${mempoolHostname}/api/blocks/tip/hash`, TIMEOUT);
-        blocksTipHash = await response.text();
-      } catch (error) {
-        console.error(`Error fetching block tip hash from ${mempoolHostname}:`, error);
+      // Define the fetch tasks
+      const tasks = [
+        fetchAndHandle(`https://${mempoolHostname}/api/blocks/tip/hash`),
+        fetchAndHandle(`https://${blockstreamHostname}/api/blocks/tip/hash`),
+        fetchAndHandle(`https://${mempoolHostname}/api/v1/fees/recommended`),
+        fetchAndHandle(`https://${blockstreamHostname}/api/fee-estimates`)
+      ];
 
-        try {
-          const response = await fetchWithTimeout(`https://${blockstreamHostname}/api/blocks/tip/hash,`, TIMEOUT);
-          blocksTipHash = await response.text();
-        } catch (error) {
-          console.error(`Error fetching block tip hash from ${blockstreamHostname}:`, error);
-        }
-      }
+      const results = await Promise.allSettled(tasks);
+      console.info('Fetch tasks completed');
 
-      // Fetch fee estimates from mempool.space API.
-      try {
-        const response = await fetchWithTimeout(`https://${mempoolHostname}/api/v1/fees/recommended`, TIMEOUT);
-        mempoolFeeEstimates = await response.json();
-      } catch (error) {
-        console.error(`Error fetching fee estimates from ${mempoolHostname}:`, error);
-      }
-
-      // Fetch fee estimates from Blockstream API.
-      try {
-        const response = await fetchWithTimeout(`https://${blockstreamHostname}/api/fee-estimates`, TIMEOUT);
-        blockstreamFeeEstimates = await response.json();
-      } catch (error) {
-        console.error(`Error fetching fee estimates from ${blockstreamHostname}:`, error);
-      }
+      // Assign the results
+      blocksTipHash = results[0].value || results[1].value;
+      mempoolFeeEstimates = results[2].value;
+      blockstreamFeeEstimates = results[3].value;
 
       // Get the minimum fee from mempool.space (we use their economy rate).
       const minFee = mempoolFeeEstimates?.economyFee;
