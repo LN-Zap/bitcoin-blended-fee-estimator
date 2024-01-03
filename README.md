@@ -1,20 +1,20 @@
-# Lnd Mempool.Space Integration
+# Bitcoin Blended Fee Estimator
 
-This project aims to integrate the [Lightning Network Daemon (lnd)](https://github.com/lightningnetwork/lnd) with [mempool.space](https://mempool.space/), a Bitcoin blockchain explorer. The primary feature of this integration is to provide fee estimates to lnd based on a combination of mempool-based estimates (from the mempool.space API) and history-based estimates (from the Blockstream API).
+This project provides bitcoin fee estimates using a blend of mempool-based and history-based estimations. The initial use case is to provide onchain fee estimates to [lnd](https://github.com/lightningnetwork/lnd), however it could easily be adapted/extended to be used by other applications.
 
 ## Fee Estimates
 
 This application uses two APIs to get fee estimates for Bitcoin transactions:
 
-- [**mempool.space API**](https://mempool.space/docs/api/rest): This API is used to get mempool-based fee estimates for upcoming blocks. The application fetches the fastestFee, halfHourFee, hourFee, economyFee, and minimumFee from the mempool.space API and uses these estimates to calculate the fee for upcoming blocks. The application also multiplies these estimates by a configurable multiplier to ensure that can be used to ensure that the fee estimates are always slightly higher or lower than the mempool.space estimates.
+- [**mempool.space API**](https://mempool.space/docs/api/rest): This API is used to get mempool-based fee estimates for upcoming blocks. The application fetches the fastestFee, halfHourFee, hourFee, economyFee, and minimumFee from the mempool.space API and uses these estimates to calculate the fee for upcoming blocks.
 
 - [**Blockstream API**](https://github.com/Blockstream/esplora/blob/master/API.md): This API is used to get history-based fee estimates for further future blocks. The application fetches the fee estimates from the Blockstream API (which gets its data from bitcoind) and adds them to the fee estimates if they are lower than the lowest fee estimate from the mempool.space API.
 
-Fee estimates are cached for a configurable amount of time (15 seconds by default) to reduce the number of API calls. The cache is automatically cleared after the configured time has elapsed.
+Fee estimates are multipled by a configurable multiplier (1.05 by default) to provide estimates are always slightly higher or lower than the raw estimates (allows a more conservative or aggressive approach), and cached for a configurable amount of time (15 seconds by default).
 
 ## API
 
-This application exposes a single API endpoint at `/v1/fee-estimates.json`. This endpoint returns a JSON object with the following structure, which is compatible with the LND's `feeurl` setting:
+This application exposes a single API endpoint at `/v1/fee-estimates.json`. This endpoint returns a JSON object with the following structure, which is compatible with the lnd's `feeurl` setting:
 
 ```json
 {
@@ -94,10 +94,10 @@ PORT=4000 MEMPOOL_HOSTNAME=localhost npm start
 This project includes Docker support and an official Docker image is available. You can run the Docker image with the following command:
 
 ```bash
-docker run -p 3000:3000 lnzap/lnd-mempoolspace:latest
+docker run -p 3000:3000 lnzap/bitcoin-blended-fee-estimator:latest
 ```
 
-This command will pull the latest `lnzap/lnd-mempoolspace` image from Docker Hub and run it. By default, the Docker image runs the server on port 3000.
+This command will pull the latest `lnzap/bitcoin-blended-fee-estimator` image from Docker Hub and run it. By default, the Docker image runs the server on port 3000.
 
 Please ensure that Docker is installed and running on your machine before running these commands.
 
@@ -134,7 +134,7 @@ Once the release is published, the Docker build and push process will start auto
 Please note that you need to have the necessary permissions to create a release and push to Docker Hub.
 
 ## Contributing
-We welcome contributions to this project. Please feel free to open an [issue](https://github.com/LN-Zap/lnd-mempoolspace/issues) or submit a [pull request](https://github.com/LN-Zap/lnd-mempoolspace/pulls).
+We welcome contributions to this project. Please feel free to open an [issue](https://github.com/LN-Zap/bitcoin-blended-fee-estimator/issues) or submit a [pull request](https://github.com/LN-Zap/bitcoin-blended-fee-estimator/pulls).
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE.md) file for more details.

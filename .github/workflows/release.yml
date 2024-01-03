@@ -10,8 +10,8 @@ jobs:
 
     env:
       GAR_REGISTRY: us-east1-docker.pkg.dev
-      GAR_IMAGE: zap-strike-infrastructure/zap-container-registry/lnd-mempoolspace
-      DOCKERHUB_IMAGE: lnzap/lnd-mempoolspace
+      GAR_IMAGE: zap-strike-infrastructure/zap-container-registry/bitcoin-blended-fee-estimator
+      DOCKERHUB_IMAGE: lnzap/bitcoin-blended-fee-estimator
 
     steps:
       - name: Checkout Code

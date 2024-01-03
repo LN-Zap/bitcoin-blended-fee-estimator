@@ -13,7 +13,7 @@ jobs:
 
     env:
       GAR_REGISTRY: us-east1-docker.pkg.dev
-      GAR_IMAGE: zap-strike-infrastructure/zap-container-registry/lnd-mempoolspace
+      GAR_IMAGE: zap-strike-infrastructure/zap-container-registry/bitcoin-blended-fee-estimator
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4
