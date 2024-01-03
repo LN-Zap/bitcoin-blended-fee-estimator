@@ -173,7 +173,7 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
     res.set('Cache-Control', `public, max-age=${stdTTL}`);
 
     // Check the Accept header and return the appropriate response
-    if (req.headers.accept.includes('text/html')) {
+    if (req.headers.accept?.includes('text/html')) {
       // Return a pretty HTML response
       res.send(`
         <head>
