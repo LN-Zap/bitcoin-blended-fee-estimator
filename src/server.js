@@ -84,6 +84,7 @@ const app = express();
 // Start the server and log the URL to the console
 const server = createServer(app).listen(port, function() {
   console.log(`Server started on http://localhost:${port}`);
+  console.log(`Fee Estimates available at http://localhost:${port}/v1/fee-estimates.json`);
 });
 
 // Enable JSON and URL-encoded request bodies
