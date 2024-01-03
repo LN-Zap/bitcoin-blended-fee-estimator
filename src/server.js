@@ -12,6 +12,8 @@ const feeMultiplier = config.get('settings.feeMultiplier');
 const stdTTL = config.get('cache.stdTTL');
 const checkperiod = config.get('cache.checkperiod');
 
+const TIMEOUT = 5000;
+
 console.log('---');
 console.log(`Using port: ${port}`);
 console.log(`Using blockstream host: ${blockstreamHostname}`);
@@ -23,6 +25,31 @@ console.log(`Using cache checkperiod: ${checkperiod}`);
 console.log('---');
 
 const myCache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
+
+/**
+ * Fetches a URL with a specified timeout.
+ *
+ * @param {string} url - The URL to fetch.
+ * @param {number} [timeout=5000] - The timeout for the fetch request in milliseconds.
+ * @returns {Promise<Response>} - The fetch Response object.
+ * @throws {Error} - Throws an error if the fetch request times out or if any other error occurs.
+ */
+async function fetchWithTimeout(url, timeout = 5000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`Request timed out after ${timeout} ms`);
+    } else {
+      throw error;
+    }
+  }
+}
 
 // Initialize the Express app
 const app = express();
@@ -60,13 +87,13 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
 
       // Fetch the current block hash.
       try {
-        const response = await fetch(`https://${mempoolHostname}/api/blocks/tip/hash`);
+        const response = await fetchWithTimeout(`https://${mempoolHostname}/api/blocks/tip/hash`, TIMEOUT);
         blocksTipHash = await response.text();
       } catch (error) {
         console.error(`Error fetching block tip hash from ${mempoolHostname}:`, error);
 
         try {
-          const response = await fetch(`https://${blockstreamHostname}/api/blocks/tip/hash`);
+          const response = await fetchWithTimeout(`https://${blockstreamHostname}/api/blocks/tip/hash,`, TIMEOUT);
           blocksTipHash = await response.text();
         } catch (error) {
           console.error(`Error fetching block tip hash from ${blockstreamHostname}:`, error);
@@ -75,7 +102,7 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
 
       // Fetch fee estimates from mempool.space API.
       try {
-        const response = await fetch(`https://${mempoolHostname}/api/v1/fees/recommended`);
+        const response = await fetchWithTimeout(`https://${mempoolHostname}/api/v1/fees/recommended`, TIMEOUT);
         mempoolFeeEstimates = await response.json();
       } catch (error) {
         console.error(`Error fetching fee estimates from ${mempoolHostname}:`, error);
@@ -83,7 +110,7 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
 
       // Fetch fee estimates from Blockstream API.
       try {
-        const response = await fetch(`https://${blockstreamHostname}/api/fee-estimates`);
+        const response = await fetchWithTimeout(`https://${blockstreamHostname}/api/fee-estimates`, TIMEOUT);
         blockstreamFeeEstimates = await response.json();
       } catch (error) {
         console.error(`Error fetching fee estimates from ${blockstreamHostname}:`, error);
