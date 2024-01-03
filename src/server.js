@@ -136,7 +136,14 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
     // Check the Accept header and return the appropriate response
     if (req.headers.accept.includes('text/html')) {
       // Return a pretty HTML response
-      res.send('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
+      res.send(`
+        <head>
+          <meta name="color-scheme" content="light dark">
+        </head>
+        <body>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        </body>
+      `);
     } else {
       // Return a JSON response
       res.json(data);
