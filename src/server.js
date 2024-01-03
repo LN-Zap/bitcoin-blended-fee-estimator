@@ -133,8 +133,14 @@ app.get('/v1/fee-estimates.json', async (req, res) => {
     // Set cache headers
     res.set('Cache-Control', `public, max-age=${stdTTL}`);
 
-    // Send the response.
-    res.json(data);
+    // Check the Accept header and return the appropriate response
+    if (req.headers.accept.includes('text/html')) {
+      // Return a pretty HTML response
+      res.send('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
+    } else {
+      // Return a JSON response
+      res.json(data);
+    }
   } catch (error) {
     console.error(error);
     res.status(500).send('Error fetching fee estimates');
