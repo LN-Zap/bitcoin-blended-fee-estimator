@@ -36,6 +36,7 @@ jobs:
           push: true
           tags: |
             ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:${{ env.VERSION }}
+            ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:latest
             ${{ env.DOCKERHUB_IMAGE }}:latest
             ${{ env.DOCKERHUB_IMAGE }}:${{ env.VERSION }}
           platforms: linux/amd64,linux/arm64

@@ -1,4 +1,4 @@
-name: Latest
+name: Dev
 
 on:
   push:
@@ -33,6 +33,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:latest
+          tags: ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:dev
           cache-from: type=gha
           cache-to: type=gha,mode=max
