@@ -68,8 +68,8 @@ Here are the available configuration options:
 - `server.port`: The port on which the server runs. Default is `3000`.
 - `blockstream.hostname`: The hostname of the Blockstream API instance to connect to. Default is `blockstream.api`.
 - `mempool.hostname`: The hostname of the mempool.space instance to connect to. Default is `mempool.space`.
-- `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `3`. Valid options are `1`, `3`, and `6`.
-- `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1.05` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates).
+- `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `6`. Valid options are `1`, `3`, and `6`.
+- `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates).
 - `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`.
 - `cache.checkperiod`: The period in seconds, used for the automatic delete check interval. Default is `20`.
 
