@@ -176,9 +176,6 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefin
   let feeByBlockTarget: FeeByBlockTarget = {};
   const minFee = mempoolFeeEstimates?.economyFee;
 
-  console.debug('calculateFees: mempoolFeeEstimates', mempoolFeeEstimates);
-  console.debug('calculateFees: blockstreamFeeEstimates', blockstreamFeeEstimates);
-
   if (mempoolFeeEstimates) {
     const blockTargetMapping: BlockTargetMapping = {
       1: 'fastestFee',
@@ -267,7 +264,7 @@ app.get('/v1/fee-estimates', async (c) => {
 
     if (!data) {
       const results = await fetchData();
-      console.info('Fetch tasks completed', results);
+      console.debug('Fetch tasks completed', results);
 
       const { blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates } = assignResults(results);
 
