@@ -236,7 +236,8 @@ const Content = (props: { siteData: SiteData; data: object }) => (
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      height: '100vh'
+      height: '100vh',
+      backgroundColor: '#000000',
     }}>
       <pre style={{
         display: 'block',
