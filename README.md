@@ -14,7 +14,7 @@ Fee estimates are multipled by a configurable multiplier (1.05 by default) to pr
 
 ## API
 
-This application exposes a single API endpoint at `/v1/fee-estimates.json`. This endpoint returns a JSON object with the following structure, which is compatible with the lnd's `feeurl` setting:
+This application exposes a single API endpoint at `/v1/fee-estimates`. This endpoint returns a JSON object with the following structure, which is compatible with the lnd's `feeurl` setting:
 
 ```json
 {
@@ -34,7 +34,7 @@ This application exposes a single API endpoint at `/v1/fee-estimates.json`. This
 
 1. Clone this repository to your local machine.
 2. Install the necessary dependencies (`npm install`)
-3. Set the `feeurl` in your lnd configuration to point to the `/v1/fee-estimates.json` endpoint of this server.
+3. Set the `feeurl` in your lnd configuration to point to the `/v1/fee-estimates` endpoint of this server.
 
 For example:
 
@@ -48,7 +48,7 @@ For example:
 ;   feeurl=
 ; Example:
 ;   feeurl=https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json
-feeurl = http://localhost:3000/v1/fee-estimates.json
+feeurl = http://localhost:3000/v1/fee-estimates
 ```
 
 Replace http://localhost:3000 with the address of your server.

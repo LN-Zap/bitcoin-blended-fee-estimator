@@ -113,7 +113,7 @@ async function fetchAndHandle(url: string): Promise<string | object | null> {
 
 // Initialize the Express app.
 const app = new Hono();
-console.info(`Fee Estimates available at http://localhost:${port}/v1/fee-estimates.json`);
+console.info(`Fee Estimates available at http://localhost:${port}/v1/fee-estimates`);
 
 // Add a health/ready endpoint.
 app.get('/health/ready', async (c) => {
@@ -256,7 +256,7 @@ const Content = (props: { siteData: SiteData; data: object }) => (
 /**
  * Returns the current fee estimates for the Bitcoin network.
  */
-app.get('/v1/fee-estimates.json', async (c) => {
+app.get('/v1/fee-estimates', async (c) => {
   try {
     let data: Data | undefined = cache.get('data');
 
