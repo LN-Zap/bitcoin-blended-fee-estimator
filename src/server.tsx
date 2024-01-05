@@ -85,6 +85,7 @@ const cache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
 
 // FIXME: fetch signal abortcontroller does not work on Bun. See https://github.com/oven-sh/bun/issues/2489
 async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise<Response> {
+  console.debug(`Starting fetch request to ${url}`);
   const fetchPromise = fetch(url);
   const timeoutPromise = new Promise((_, reject) => 
     setTimeout(() => reject(new Error(`Request timed out after ${timeout} ms`)), timeout)
@@ -99,6 +100,7 @@ async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise
 async function fetchAndHandle(url: string): Promise<string | object | null> {
   try {
     const response = await fetchWithTimeout(url, TIMEOUT);
+    console.debug(`Successfully fetched data from ${url}`, response);
     const contentType = response.headers.get("content-type");
     if (contentType?.includes("application/json")) {
       return await response.json();
