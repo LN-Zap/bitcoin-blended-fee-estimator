@@ -3,6 +3,7 @@ import { raw } from 'hono/html'
 import { logger } from 'hono/logger'
 import { etag } from 'hono/etag'
 import { cors } from 'hono/cors'
+import { serveStatic } from 'hono/bun'
 import config from 'config'
 import NodeCache from 'node-cache';
 
@@ -133,6 +134,7 @@ app.use('*', etag())
 app.use('*', cors({
   origin: '*',
 }))
+app.use('/static/*', serveStatic({ root: './' }))
 
 /**
  * Fetches the data from the mempool and esplora APIs.
@@ -224,16 +226,12 @@ const Layout = (props: SiteData) => {
       <head>
         <title>{props.title}</title>
         <meta name="color-scheme" content="light dark"/>
+        <link rel="stylesheet" href="/static/style.css"/>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link rel="preconnect" href="https://fonts.gstatic.com"/>
+        <link href="https://fonts.googleapis.com/css2?family=Arimo&family=Montserrat&family=Roboto:wght@100&display=swap" rel="stylesheet"/>
       </head>
-      <body style={{
-        padding: 0,
-        margin: 0,
-        backgroundColor: '#000000',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        height: '100vh'
-      }}>{props.children}</body>
+      <body>{props.children}</body>
     </html>
   )
 }
@@ -249,23 +247,33 @@ const Content = (props: { siteData: SiteData; data: object }) => (
 
     <div style={{
       display: 'flex',
+      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
     }}>
-      <pre style={{
+      <div style={{
         display: 'block',
         margin: 'auto',
-        borderRadius: '10px',
-        padding: '20px',
-        backgroundColor: '#1A1A1A',
+        borderRadius: '7px',
+        padding: '10px',
         overflowX: 'auto'
       }}>
-        <h1>{props.siteData.title}</h1>
-        <p>{props.siteData.subtitle}</p>
-        <hr/>
-        {raw(JSON.stringify(props.data, null, 2))}
-      </pre>
+
+        <div class="header">
+          <h1>{props.siteData.title}</h1>
+          <p>{props.siteData.subtitle}</p>
+        </div>
+
+        <pre>
+          <span class="blue">curl</span> -L -X GET <span class="green">'http://localhost:{port}/v1/fee-estimates'</span> -H <span class="green">'Accept: application/json'</span>
+        </pre>
+
+        <pre>
+          {raw(JSON.stringify(props.data, null, 2))}
+        </pre>
+
+      </div>
     </div>
   </Layout>
 );
