@@ -211,7 +211,8 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefin
 // Define the layout components.
 
 interface SiteData {
-  title: string
+  title: string,
+  subtitle: string,
   children?: any
 }
 
@@ -249,6 +250,8 @@ const Content = (props: { siteData: SiteData; data: object }) => (
         overflowX: 'auto'
       }}>
         <h1>{props.siteData.title}</h1>
+        <p>{props.siteData.subtitle}</p>
+        <hr/>
         {raw(JSON.stringify(props.data, null, 2))}
       </pre>
     </div>
@@ -286,6 +289,7 @@ app.get('/v1/fee-estimates', async (c) => {
       const props = {
         siteData: {
           title: 'Bitcoin Blended Fee Estimator',
+          subtitle: 'A blend of mempool-based and history-based Bitcoin fee estimates.',
         },
         data,
       }
