@@ -41,7 +41,7 @@ const stdTTL = config.get<number>('cache.stdTTL');
 const checkperiod = config.get<number>('cache.checkperiod');
 
 // Set the timeout for fetch requests.
-const TIMEOUT: number = 5000;
+const TIMEOUT: number = 3000;
 
 // Log the configuration values.
 console.info('---');
@@ -152,22 +152,18 @@ async function fetchData() {
 function assignResults(results: PromiseSettledResult<any>[]) {
   let blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates;
 
-  if (results[0].status === "fulfilled") {
+  if (results[0].status === "fulfilled" && results[0].value) {
     blocksTipHash = results[0].value;
-  } else if (results[1].status === "fulfilled") {
+  } else if (results[1].status === "fulfilled" && results[1].value) {
     blocksTipHash = results[1].value;
   }
 
-  if (results[2].status === "fulfilled") {
+  if (results[2].status === "fulfilled" && results[2].value) {
     mempoolFeeEstimates = results[2].value as MempoolFeeEstimates;
-  } else {
-    console.error("Error fetching blockstream fee estimates:", results[2].reason);
   }
 
-  if (results[3].status === "fulfilled") {
+  if (results[3].status === "fulfilled" && results[3].value) {
     blockstreamFeeEstimates = results[3].value as BlockstreamFeeEstimates;
-  } else {
-    console.error("Error fetching blockstream fee estimates:", results[3].reason);
   }
 
   return { blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates };
@@ -236,7 +232,24 @@ const Layout = (props: SiteData) => {
 
 const Content = (props: { siteData: SiteData; data: object }) => (
   <Layout {...props.siteData}>
-    <pre>{raw(JSON.stringify(props.data, null, 2))}</pre>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh'
+    }}>
+      <pre style={{
+        display: 'block',
+        margin: 'auto',
+        maxWidth: '80%',
+        borderRadius: '10px',
+        padding: '20px',
+        backgroundColor: '#1A1A1A',
+        overflowX: 'auto'
+      }}>
+        {raw(JSON.stringify(props.data, null, 2))}
+      </pre>
+    </div>
   </Layout>
 );
 
