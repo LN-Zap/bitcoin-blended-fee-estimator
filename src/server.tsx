@@ -225,7 +225,11 @@ const Layout = (props: SiteData) => {
         <title>{props.title}</title>
         <meta name="color-scheme" content="light dark"/>
       </head>
-      <body>{props.children}</body>
+      <body style={{
+        padding: 0,
+        margin: 0,
+        backgroundColor: '#000000',
+      }}>{props.children}</body>
     </html>
   )
 }
@@ -237,7 +241,6 @@ const Content = (props: { siteData: SiteData; data: object }) => (
       justifyContent: 'center',
       alignItems: 'center',
       height: '100vh',
-      backgroundColor: '#000000',
     }}>
       <pre style={{
         display: 'block',
@@ -248,6 +251,7 @@ const Content = (props: { siteData: SiteData; data: object }) => (
         backgroundColor: '#1A1A1A',
         overflowX: 'auto'
       }}>
+        <h1>{props.siteData.title}</h1>
         {raw(JSON.stringify(props.data, null, 2))}
       </pre>
     </div>
