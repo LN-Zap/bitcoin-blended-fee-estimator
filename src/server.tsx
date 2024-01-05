@@ -14,7 +14,7 @@ type MempoolFeeEstimates = {
   economyFee: number;
 };
 
-type BlockstreamFeeEstimates = {
+type EsploraFeeEstimates = {
   [key: number]: number;
 };
 
@@ -33,7 +33,7 @@ type BlockTargetMapping = {
 
 // Get application configuration values from the config package.
 const port = config.get<number>('server.port');
-const blockstreamHostname = config.get<string>('blockstream.hostname');
+const esploraHostname = config.get<string>('esplora.hostname');
 const mempoolHostname = config.get<string>('mempool.hostname');
 const mempoolDepth = config.get<number>('mempool.depth');
 const feeMultiplier = config.get<number>('settings.feeMultiplier');
@@ -46,7 +46,7 @@ const TIMEOUT: number = 3000;
 // Log the configuration values.
 console.info('---');
 console.info(`Using port: ${port}`);
-console.info(`Using blockstream host: ${blockstreamHostname}`);
+console.info(`Using esplora host: ${esploraHostname}`);
 console.info(`Using mempool host: ${mempoolHostname}`);
 console.info(`Using mempool depth: ${mempoolDepth}`);
 console.info(`Using fee multiplier: ${feeMultiplier}`);
@@ -133,14 +133,14 @@ app.use('*', cors({
 }))
 
 /**
- * Fetches the data from the mempool and blockstream APIs.
+ * Fetches the data from the mempool and esplora APIs.
  */
 async function fetchData() {
   const tasks = [
     fetchAndHandle(`https://${mempoolHostname}/api/blocks/tip/hash`),
-    fetchAndHandle(`https://${blockstreamHostname}/api/blocks/tip/hash`),
+    fetchAndHandle(`https://${esploraHostname}/api/blocks/tip/hash`),
     fetchAndHandle(`https://${mempoolHostname}/api/v1/fees/recommended`),
-    fetchAndHandle(`https://${blockstreamHostname}/api/fee-estimates`)
+    fetchAndHandle(`https://${esploraHostname}/api/fee-estimates`)
   ];
 
   return await Promise.allSettled(tasks);
@@ -150,7 +150,7 @@ async function fetchData() {
  * Assigns the results of the fetch tasks to variables.
  */
 function assignResults(results: PromiseSettledResult<any>[]) {
-  let blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates;
+  let blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates;
 
   if (results[0].status === "fulfilled" && results[0].value) {
     blocksTipHash = results[0].value;
@@ -163,16 +163,16 @@ function assignResults(results: PromiseSettledResult<any>[]) {
   }
 
   if (results[3].status === "fulfilled" && results[3].value) {
-    blockstreamFeeEstimates = results[3].value as BlockstreamFeeEstimates;
+    esploraFeeEstimates = results[3].value as EsploraFeeEstimates;
   }
 
-  return { blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates };
+  return { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates: esploraFeeEstimates };
 }
 
 /**
  * Calculates the fee estimates for the Bitcoin network.
  */
-function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, blockstreamFeeEstimates: BlockstreamFeeEstimates | null | undefined) {
+function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, esploraFeeEstimates: EsploraFeeEstimates | null | undefined) {
   let feeByBlockTarget: FeeByBlockTarget = {};
   const minFee = mempoolFeeEstimates?.economyFee;
 
@@ -194,8 +194,8 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefin
   const values = Object.values(feeByBlockTarget);
   const minMempoolFee = values.length > 0 ? Math.min(...values) : undefined;
 
-  if (blockstreamFeeEstimates) {
-    for (const [blockTarget, fee] of Object.entries(blockstreamFeeEstimates)) {
+  if (esploraFeeEstimates) {
+    for (const [blockTarget, fee] of Object.entries(esploraFeeEstimates)) {
       if (!feeByBlockTarget.hasOwnProperty(blockTarget)) {
         const adjustedFee = Math.round(fee * 1000 * feeMultiplier);
         if ((!minMempoolFee || adjustedFee < minMempoolFee) && (!minFee || adjustedFee > minFee)) {
@@ -279,9 +279,9 @@ app.get('/v1/fee-estimates', async (c) => {
       const results = await fetchData();
       console.debug('Fetch tasks completed', results);
 
-      const { blocksTipHash, mempoolFeeEstimates, blockstreamFeeEstimates } = assignResults(results);
+      const { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates: esploraFeeEstimates } = assignResults(results);
 
-      const feeByBlockTarget = calculateFees(mempoolFeeEstimates, blockstreamFeeEstimates);
+      const feeByBlockTarget = calculateFees(mempoolFeeEstimates, esploraFeeEstimates);
 
       data = {
         current_block_hash: blocksTipHash,

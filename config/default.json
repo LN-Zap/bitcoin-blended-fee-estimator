@@ -9,7 +9,7 @@
         "hostname": "mempool.space",
         "depth": 6
     },
-    "blockstream": {
+    "esplora": {
         "hostname": "blockstream.info"
     },
     "cache": {
