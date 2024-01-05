@@ -23,6 +23,7 @@ This application exposes a single API endpoint at `/v1/fee-estimates`. This endp
         "1": 81900,
         "2": 78750,
         "3": 74550,
+        "6": 68700,
         "144": 64951,
         "504": 53464,
         "1008": 28175
