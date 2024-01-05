@@ -27,6 +27,6 @@
     "useUnknownInCatchVariables": true,
     "noPropertyAccessFromIndexSignature": true,
 
-    "types": ["bun-types"]
+    "types": ["bun-types", "src/custom.d.ts"]
   }
 }

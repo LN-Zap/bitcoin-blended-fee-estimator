@@ -1,12 +1,21 @@
+:root {
+    --main-bg-color: #000000;
+    --pre-bg-color: #1A1A1A;
+    --pre-color: #E3E3E3;
+    --green-color: #85d996;
+    --blue-color: #85d996;
+    --font-family: 'Arimo', sans-serif;
+}
+
 body {
     padding: 0;
     margin: 0;
-    background-color: #000000;
+    background-color: var(--main-bg-color);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     height: 100vh;
-    font-family: 'Arimo', sans-serif;
+    font-family: var(--font-family);
 }
 
 pre {
@@ -14,10 +23,10 @@ pre {
     margin: auto;
     border-radius: 7px;
     padding: 16px;
-    background-color: #1A1A1A;
+    background-color: var(--pre-bg-color);
     overflow-x: auto;
     margin-bottom: 16px;
-    color: #E3E3E3;
+    color: var(--pre-color);
 }
 
 .header {
@@ -25,9 +34,9 @@ pre {
 }
 
 .green {
-    color: #85d996;
+    color: var(--green-color);
 }
 
 .blue {
-    color: #85d996;
+    color: var(--blue-color);
 }
