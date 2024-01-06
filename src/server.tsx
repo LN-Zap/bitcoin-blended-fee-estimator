@@ -9,8 +9,8 @@ import NodeCache from 'node-cache';
 
 // Get application configuration values from the config package.
 const port = config.get<number>('server.port');
-const esploraHostname = config.get<string>('esplora.hostname');
-const mempoolHostname = config.get<string>('mempool.hostname');
+const esploraBaseUrl = config.get<string>('esplora.baseUrl');
+const mempoolBaseUrl = config.get<string>('mempool.baseUrl');
 const mempoolDepth = config.get<number>('mempool.depth');
 const feeMultiplier = config.get<number>('settings.feeMultiplier');
 const stdTTL = config.get<number>('cache.stdTTL');
@@ -22,9 +22,9 @@ const TIMEOUT: number = 3000;
 // Log the configuration values.
 console.info('---');
 console.info(`Using port: ${port}`);
-console.info(`Using esplora host: ${esploraHostname}`);
-console.info(`Using mempool host: ${mempoolHostname}`);
-console.info(`Using mempool depth: ${mempoolDepth}`);
+console.info(`Using Esplora host: ${esploraBaseUrl}`);
+console.info(`Using Mempool base URL: ${mempoolBaseUrl}`);
+console.info(`Using Mempool base URL: ${mempoolDepth}`);
 console.info(`Using fee multiplier: ${feeMultiplier}`);
 console.info(`Using cache stdTTL: ${stdTTL}`);
 console.info(`Using cache checkperiod: ${checkperiod}`);
@@ -76,7 +76,7 @@ async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise
 async function fetchAndHandle(url: string): Promise<string | object | null> {
   try {
     const response = await fetchWithTimeout(url, TIMEOUT);
-    console.debug(`Successfully fetched data from ${url}`, response);
+    console.debug(`Successfully fetched data from ${url}`);
     const contentType = response.headers.get("content-type");
     if (contentType?.includes("application/json")) {
       return await response.json();
@@ -116,10 +116,10 @@ app.use('/static/*', serveStatic({ root: './' }))
  */
 async function fetchData() {
   const tasks = [
-    fetchAndHandle(`https://${mempoolHostname}/api/blocks/tip/hash`),
-    fetchAndHandle(`https://${esploraHostname}/api/blocks/tip/hash`),
-    fetchAndHandle(`https://${mempoolHostname}/api/v1/fees/recommended`),
-    fetchAndHandle(`https://${esploraHostname}/api/fee-estimates`)
+    fetchAndHandle(`${mempoolBaseUrl}/api/blocks/tip/hash`),
+    fetchAndHandle(`${esploraBaseUrl}/api/blocks/tip/hash`),
+    fetchAndHandle(`${mempoolBaseUrl}/api/v1/fees/recommended`),
+    fetchAndHandle(`${esploraBaseUrl}/api/fee-estimates`)
   ];
 
   return await Promise.allSettled(tasks);

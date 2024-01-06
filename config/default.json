@@ -6,11 +6,11 @@
         "feeMultiplier": 1
     },
     "mempool": {
-        "hostname": "mempool.space",
+        "baseUrl": "https://mempool.space",
         "depth": 6
     },
     "esplora": {
-        "hostname": "blockstream.info"
+        "baseUrl": "https://blockstream.info"
     },
     "cache": {
         "stdTTL": 15,

@@ -67,8 +67,8 @@ This project uses the [`config`](https://www.npmjs.com/package/config) package f
 Here are the available configuration options:
 
 - `server.port`: The port on which the server runs. Default is `3000`.
-- `esplora.hostname`: The hostname of the Esplora API instance to connect to. Default is `blockstream.info`.
-- `mempool.hostname`: The hostname of the Mempool instance to connect to. Default is `mempool.space`.
+- `esplora.baseUrl`: The base URL of the Esplora API instance to connect to. Default is `https://blockstream.info`.
+- `mempool.baseUrl`: The base URL of the Mempool instance to connect to. Default is `https://mempool.space`.
 - `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `6`. Valid options are `1`, `3`, and `6`.
 - `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates).
 - `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`.
@@ -77,8 +77,8 @@ Here are the available configuration options:
 You can override these options by setting the corresponding environment variables:
 
 - `PORT`: Overrides `server.port`.
-- `ESPLORA_HOSTNAME`: Overrides `esplora.hostname`.
-- `MEMPOOL_HOSTNAME`: Overrides `mempool.hostname`.
+- `ESPLORA_BASE_URL`: Overrides `esplora.baseUrl`.
+- `MEMPOOL_BASE_URL`: Overrides `mempool.baseUrl`.
 - `MEMPOOL_DEPTH`: Overrides `mempool.depth`.
 - `FEE_MULTIPLIER`: Overrides `settings.feeMultiplier`.
 - `CACHE_STDTTL`: Overrides `cache.stdTTL`.
@@ -87,7 +87,7 @@ You can override these options by setting the corresponding environment variable
 For example, to run the server on port 4000 and connect to a local Mempool instance, you can start the server like this:
 
 ```bash
-PORT=4000 MEMPOOL_HOSTNAME=localhost npm start
+PORT=4000 MEMPOOL_BASE_URL=localhost npm start
 ```
 
 ## Development

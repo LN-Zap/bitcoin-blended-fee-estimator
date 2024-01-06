@@ -6,11 +6,11 @@
         "feeMultiplier": "FEE_MULTIPLIER"
     },
     "mempool": {
-        "hostname": "MEMPOOL_HOSTNAME",
+        "baseUrl": "MEMPOOL_BASE_URL",
         "depth": "MEMPOOL_DEPTH"
     },
     "blockstream": {
-        "hostname": "ESPLORA_HOSTNAME"
+        "baseUrl": "ESPLORA_BASE_URL"
     },
     "cache": {
         "stdTTL": "CACHE_STD_TTL",
