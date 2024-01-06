@@ -14,7 +14,7 @@ Fee estimates are multipled by a configurable multiplier (1 by default) to allow
 
 ## API
 
-This application exposes a single API endpoint at `/v1/fee-estimates`. This endpoint returns a JSON object with the following structure, which is compatible with the lnd's `feeurl` setting:
+This application exposes a single API endpoint at `/v1/fee-estimates`. This endpoint returns a JSON object with the following structure, which is compatible with lnd's `feeurl` setting:
 
 ```json
 {
@@ -34,7 +34,7 @@ This application exposes a single API endpoint at `/v1/fee-estimates`. This endp
 ## Setup & Usage
 
 1. Clone this repository to your local machine.
-2. Install the necessary dependencies (`npm install`)
+2. Install the necessary dependencies (`bun install`)
 3. Set the `feeurl` in your lnd configuration to point to the `/v1/fee-estimates` endpoint of this server.
 
 For example:
@@ -90,6 +90,20 @@ For example, to run the server on port 4000 and connect to a local Mempool insta
 PORT=4000 MEMPOOL_HOSTNAME=localhost npm start
 ```
 
+## Development
+
+This project is a lightweight and performant javascript app, built using [Bun](https://bun.sh/) and [Hono](https://hono.dev/).
+
+### Prerequisites
+
+- [Bun](https://bun.sh/)
+
+### Running the Server
+
+```sh
+bun run dev
+```
+
 ## Docker
 
 This project includes Docker support and an official Docker image is available. You can run the Docker image with the following command:
@@ -112,8 +126,8 @@ You can build a Docker image from the source and run it with the following scrip
 For example, to build and run the Docker image, you can use the following commands:
 
 ```bash
-npm run docker:build
-npm run docker:run
+bun run docker:build
+bun run docker:run
 ```
 
 ## Contributing
