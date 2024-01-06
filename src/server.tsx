@@ -9,6 +9,7 @@ import NodeCache from 'node-cache';
 
 // Get application configuration values from the config package.
 const port = config.get<number>('server.port');
+const baseUrl = config.get<number>('server.baseUrl');
 const esploraBaseUrl = config.get<string>('esplora.baseUrl');
 const mempoolBaseUrl = config.get<string>('mempool.baseUrl');
 const mempoolDepth = config.get<number>('mempool.depth');
@@ -22,6 +23,7 @@ const TIMEOUT: number = 3000;
 // Log the configuration values.
 console.info('---');
 console.info(`Using port: ${port}`);
+console.info(`Using base URL: ${baseUrl}`);
 console.info(`Using Esplora host: ${esploraBaseUrl}`);
 console.info(`Using Mempool base URL: ${mempoolBaseUrl}`);
 console.info(`Using Mempool base URL: ${mempoolDepth}`);
@@ -91,7 +93,7 @@ async function fetchAndHandle(url: string): Promise<string | object | null> {
 
 // Initialize the Express app.
 const app = new Hono();
-console.info(`Fee Estimates available at http://localhost:${port}/v1/fee-estimates`);
+console.info(`Fee Estimates available at ${baseUrl}/v1/fee-estimates`);
 
 // Add a health/ready endpoint.
 app.get('/health/ready', async (c) => {
@@ -238,7 +240,7 @@ const Content = (props: { siteData: SiteData; data: object }) => (
         </div>
 
         <pre>
-          <span class="blue">curl</span> -L -X GET <span class="green">'http://localhost:{port}/v1/fee-estimates'</span> -H <span class="green">'Accept: application/json'</span>
+          <span class="blue">curl</span> -L -X GET <span class="green">'{baseUrl}/v1/fee-estimates'</span> -H <span class="green">'Accept: application/json'</span>
         </pre>
 
         <pre>

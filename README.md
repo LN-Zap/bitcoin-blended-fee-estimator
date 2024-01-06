@@ -66,23 +66,25 @@ This project uses the [`config`](https://www.npmjs.com/package/config) package f
 
 Here are the available configuration options:
 
-- `server.port`: The port on which the server runs. Default is `3000`.
-- `esplora.baseUrl`: The base URL of the Esplora API instance to connect to. Default is `https://blockstream.info`.
-- `mempool.baseUrl`: The base URL of the Mempool instance to connect to. Default is `https://mempool.space`.
-- `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `6`. Valid options are `1`, `3`, and `6`.
-- `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates).
-- `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`.
-- `cache.checkperiod`: The period in seconds, used for the automatic delete check interval. Default is `20`.
+- `server.port`: The port on which the server runs. Default is `3000`
+- `server.baseUrl`: The base url port on which the server is accessible. Default is `http://localhost:3000`
+- `esplora.baseUrl`: The base URL of the Esplora API instance to connect to. Default is `https://blockstream.info`
+- `mempool.baseUrl`: The base URL of the Mempool instance to connect to. Default is `https://mempool.space`
+- `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `6`. Valid options are `1`, `3`, and `6`
+- `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates)
+- `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`
+- `cache.checkperiod`: The period in seconds, used for the automatic delete check interval. Default is `20`
 
 You can override these options by setting the corresponding environment variables:
 
-- `PORT`: Overrides `server.port`.
-- `ESPLORA_BASE_URL`: Overrides `esplora.baseUrl`.
-- `MEMPOOL_BASE_URL`: Overrides `mempool.baseUrl`.
-- `MEMPOOL_DEPTH`: Overrides `mempool.depth`.
-- `FEE_MULTIPLIER`: Overrides `settings.feeMultiplier`.
-- `CACHE_STDTTL`: Overrides `cache.stdTTL`.
-- `CACHE_CHECKPERIOD`: Overrides `cache.checkperiod`.
+- `PORT`: Overrides `server.port`
+- `BASE_URL`: Overrides `server.baseUrl`
+- `ESPLORA_BASE_URL`: Overrides `esplora.baseUrl`
+- `MEMPOOL_BASE_URL`: Overrides `mempool.baseUrl`
+- `MEMPOOL_DEPTH`: Overrides `mempool.depth`
+- `FEE_MULTIPLIER`: Overrides `settings.feeMultiplier`
+- `CACHE_STDTTL`: Overrides `cache.stdTTL`
+- `CACHE_CHECKPERIOD`: Overrides `cache.checkperiod`
 
 For example, to run the server on port 4000 and connect to a local Mempool instance, you can start the server like this:
 

@@ -1,5 +1,6 @@
 {
     "server": {
+        "baseUrl": "BASE_URL",
         "port": "PORT"
     },
     "settings": {
