@@ -8,13 +8,13 @@ This application uses two APIs to get fee estimates for Bitcoin transactions:
 
 - [**mempool.space API**](https://mempool.space/docs/api/rest): This API is used to get mempool-based fee estimates for upcoming blocks. The application fetches the fastestFee, halfHourFee, hourFee, economyFee, and minimumFee from the mempool.space API and uses these estimates to calculate the fee for upcoming blocks.
 
-- [**Blockstream API**](https://github.com/Blockstream/esplora/blob/master/API.md): This API is used to get history-based fee estimates for further future blocks. The application fetches the fee estimates from the Blockstream API (which gets its data from bitcoind) and adds them to the fee estimates if they are lower than the lowest fee estimate from the mempool.space API.
+- [**Esplora API**](https://github.com/Blockstream/esplora/blob/master/API.md): This API is used to get history-based fee estimates for further future blocks. The application fetches the fee estimates from the Esplora API (which gets its data from bitcoind) and adds them to the fee estimates if they are lower than the lowest fee estimate from the mempool.space API.
 
-Fee estimates are multipled by a configurable multiplier (1.05 by default) to provide estimates are always slightly higher or lower than the raw estimates (allows a more conservative or aggressive approach), and cached for a configurable amount of time (15 seconds by default).
+Fee estimates are multipled by a configurable multiplier (1 by default) to allow a more conservative or aggressive approach, and cached for a configurable amount of time (15 seconds by default).
 
 ## API
 
-This application exposes a single API endpoint at `/v1/fee-estimates.json`. This endpoint returns a JSON object with the following structure, which is compatible with the lnd's `feeurl` setting:
+This application exposes a single API endpoint at `/v1/fee-estimates`. This endpoint returns a JSON object with the following structure, which is compatible with the lnd's `feeurl` setting:
 
 ```json
 {
@@ -23,6 +23,7 @@ This application exposes a single API endpoint at `/v1/fee-estimates.json`. This
         "1": 81900,
         "2": 78750,
         "3": 74550,
+        "6": 68700,
         "144": 64951,
         "504": 53464,
         "1008": 28175
@@ -34,7 +35,7 @@ This application exposes a single API endpoint at `/v1/fee-estimates.json`. This
 
 1. Clone this repository to your local machine.
 2. Install the necessary dependencies (`npm install`)
-3. Set the `feeurl` in your lnd configuration to point to the `/v1/fee-estimates.json` endpoint of this server.
+3. Set the `feeurl` in your lnd configuration to point to the `/v1/fee-estimates` endpoint of this server.
 
 For example:
 
@@ -48,7 +49,7 @@ For example:
 ;   feeurl=
 ; Example:
 ;   feeurl=https://nodes.lightning.computer/fees/v1/btc-fee-estimates.json
-feeurl = http://localhost:3000/v1/fee-estimates.json
+feeurl = http://localhost:3000/v1/fee-estimates
 ```
 
 Replace http://localhost:3000 with the address of your server.
@@ -66,17 +67,17 @@ This project uses the [`config`](https://www.npmjs.com/package/config) package f
 Here are the available configuration options:
 
 - `server.port`: The port on which the server runs. Default is `3000`.
-- `blockstream.hostname`: The hostname of the Blockstream API instance to connect to. Default is `blockstream.api`.
+- `esplora.hostname`: The hostname of the Esplora API instance to connect to. Default is `blockstream.api`.
 - `mempool.hostname`: The hostname of the mempool.space instance to connect to. Default is `mempool.space`.
-- `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `3`. Valid options are `1`, `3`, and `6`.
-- `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1.05` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates).
+- `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `6`. Valid options are `1`, `3`, and `6`.
+- `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates).
 - `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`.
 - `cache.checkperiod`: The period in seconds, used for the automatic delete check interval. Default is `20`.
 
 You can override these options by setting the corresponding environment variables:
 
 - `PORT`: Overrides `server.port`.
-- `BLOCKSTREAM_HOSTNAME`: Overrides `blockstream.hostname`.
+- `ESPLORA_HOSTNAME`: Overrides `esplora.hostname`.
 - `MEMPOOL_HOSTNAME`: Overrides `mempool.hostname`.
 - `MEMPOOL_DEPTH`: Overrides `mempool.depth`.
 - `FEE_MULTIPLIER`: Overrides `settings.feeMultiplier`.

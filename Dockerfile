@@ -1,33 +1,36 @@
-# Use an official Node.js runtime as a parent image
-FROM node:20-alpine
+# use the official Bun image
+# see all versions at https://hub.docker.com/r/oven/bun/tags
+FROM oven/bun:1.0.21-slim as base
+WORKDIR /usr/src/app
 
-# Create a non-root user
-RUN adduser -D app
+# install dependencies into temp directory
+# this will cache them and speed up future builds
+FROM base AS install
+RUN mkdir -p /temp/dev
+COPY package.json bun.lockb /temp/dev/
+RUN cd /temp/dev && bun install --frozen-lockfile
 
-# Set the working directory to /app
-WORKDIR /app
+# install with --production (exclude devDependencies)
+RUN mkdir -p /temp/prod
+COPY package.json bun.lockb /temp/prod/
+RUN cd /temp/prod && bun install --frozen-lockfile --production
 
-# Copy package.json and package-lock.json to the container
-COPY package*.json ./
+# copy node_modules from temp directory
+# then copy all (non-ignored) project files into the image
+FROM base AS prerelease
+COPY --from=install /temp/dev/node_modules node_modules
+COPY . .
 
-# Install app dependencies
-RUN npm install --omit dev
+# copy production dependencies and source code into final image
+FROM base AS release
+COPY --from=install /temp/prod/node_modules node_modules
+COPY --from=prerelease /usr/src/app/src src
+COPY --from=prerelease /usr/src/app/config config
+COPY --from=prerelease /usr/src/app/static static
+COPY --from=prerelease /usr/src/app/package.json .
+COPY --from=prerelease /usr/src/app/tsconfig.json .
 
-# Copy the rest of the app source code to the container
-COPY src src
-COPY config config
-
-# Change ownership of the app directory to the non-root user
-RUN chown -R app:app /app
-
-# Switch to the non-root user
-USER app
-
-# Expose the port that the app is listening on
-EXPOSE $PORT
-
-# This lets Node.js dependencies know we are running in production mode.
-ENV NODE_ENV production
-
-# Start the app
-CMD [ "node", "src/server.js" ]
+# run the app
+USER bun
+EXPOSE 3000/tcp
+ENTRYPOINT [ "bun", "run", "src/server.tsx" ]

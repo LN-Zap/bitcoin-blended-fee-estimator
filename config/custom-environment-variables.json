@@ -10,7 +10,7 @@
         "depth": "MEMPOOL_DEPTH"
     },
     "blockstream": {
-        "hostname": "BLOCKSTREAM_HOSTNAME"
+        "hostname": "ESPLORA_HOSTNAME"
     },
     "cache": {
         "stdTTL": "CACHE_STD_TTL",
