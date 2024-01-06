@@ -78,6 +78,9 @@ async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise
 async function fetchAndHandle(url: string): Promise<string | object | null> {
   try {
     const response = await fetchWithTimeout(url, TIMEOUT);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     console.debug(`Successfully fetched data from ${url}`);
     const contentType = response.headers.get("content-type");
     if (contentType?.includes("application/json")) {
