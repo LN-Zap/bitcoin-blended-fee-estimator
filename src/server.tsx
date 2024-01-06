@@ -158,7 +158,7 @@ function assignResults(results: PromiseSettledResult<any>[]) {
  */
 function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, esploraFeeEstimates: EsploraFeeEstimates | null | undefined) {
   let feeByBlockTarget: FeeByBlockTarget = {};
-  const minFee = mempoolFeeEstimates?.economyFee;
+  const minFee = mempoolFeeEstimates?.minimumFee;
 
   if (mempoolFeeEstimates) {
     const blockTargetMapping: BlockTargetMapping = {
