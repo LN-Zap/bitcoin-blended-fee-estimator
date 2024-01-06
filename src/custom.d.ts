@@ -4,6 +4,7 @@ type MempoolFeeEstimates = {
   halfHourFee: number;
   hourFee: number;
   economyFee: number;
+  minimumFee: number;
 };
 
 type EsploraFeeEstimates = {
