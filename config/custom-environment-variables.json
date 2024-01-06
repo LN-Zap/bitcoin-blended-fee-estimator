@@ -10,7 +10,7 @@
         "baseUrl": "MEMPOOL_BASE_URL",
         "depth": "MEMPOOL_DEPTH"
     },
-    "blockstream": {
+    "esplora": {
         "baseUrl": "ESPLORA_BASE_URL"
     },
     "cache": {
