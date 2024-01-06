@@ -274,6 +274,8 @@ app.get('/v1/fee-estimates', async (c) => {
       cache.set('data', data);
     }
 
+    console.debug('Returning data', data);
+
     // Set cache headers.
     c.res.headers.set('Cache-Control', `public, max-age=${stdTTL}`)
 
