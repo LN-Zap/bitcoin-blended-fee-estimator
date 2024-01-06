@@ -6,9 +6,9 @@ This project provides bitcoin fee estimates using a blend of mempool-based and h
 
 This application uses two APIs to get fee estimates for Bitcoin transactions:
 
-- [**mempool.space API**](https://mempool.space/docs/api/rest): This API is used to get mempool-based fee estimates for upcoming blocks. The application fetches the fastestFee, halfHourFee, hourFee, economyFee, and minimumFee from the mempool.space API and uses these estimates to calculate the fee for upcoming blocks.
+- [**Mempool API**](https://github.com/mempool/mempool): This API is used to get mempool-based fee estimates for upcoming blocks. The application fetches the fastestFee, halfHourFee, hourFee, economyFee, and minimumFee from the Mempool API and uses these estimates to calculate the fee for upcoming blocks.
 
-- [**Esplora API**](https://github.com/Blockstream/esplora/blob/master/API.md): This API is used to get history-based fee estimates for further future blocks. The application fetches the fee estimates from the Esplora API (which gets its data from bitcoind) and adds them to the fee estimates if they are lower than the lowest fee estimate from the mempool.space API.
+- [**Esplora API**](https://github.com/Blockstream/esplora/blob/master/API.md): This API is used to get history-based fee estimates for further future blocks. The application fetches fee estimates from the Esplora API (which gets its data from bitcoind) and adds them to the fee estimates if they are lower than the lowest fee estimate from the Mempool API.
 
 Fee estimates are multipled by a configurable multiplier (1 by default) to allow a more conservative or aggressive approach, and cached for a configurable amount of time (15 seconds by default).
 
@@ -56,9 +56,9 @@ Replace http://localhost:3000 with the address of your server.
 
 Please ensure that your server is properly configured to allow connections from the machine where lnd is running. You may need to adjust your firewall settings or other security configurations to allow this.
 
-In addition, you may need to adjust the settings of your mempool.space instance to allow API requests from this integration. Please refer to the mempool.space documentation for more information on this.
+In addition, you may need to adjust the settings of your Mempool or Esplora instance to allow API requests from this integration. Please refer to the respective documentation for more information on this.
 
-> **Note:** By default, this integration connects to the public API of mempool.space. However, for better performance and reliability, it is recommended to run your own instance of mempool.space and configure this integration to connect to it.
+> **Note:** By default, this integration connects to the public API of [mempool.space](https://mempool.space) and [blokstream.info](https://blockstream.info). However, for better performance and reliability, it is recommended to run your own instances of Mempool and Esplora and configure this integration to connect to those.
 
 ## Configuration Options
 
@@ -67,8 +67,8 @@ This project uses the [`config`](https://www.npmjs.com/package/config) package f
 Here are the available configuration options:
 
 - `server.port`: The port on which the server runs. Default is `3000`.
-- `esplora.hostname`: The hostname of the Esplora API instance to connect to. Default is `blockstream.api`.
-- `mempool.hostname`: The hostname of the mempool.space instance to connect to. Default is `mempool.space`.
+- `esplora.hostname`: The hostname of the Esplora API instance to connect to. Default is `blockstream.info`.
+- `mempool.hostname`: The hostname of the Mempool instance to connect to. Default is `mempool.space`.
 - `mempool.depth`: The number of blocks to use for mempool-based fee estimates. Default is `6`. Valid options are `1`, `3`, and `6`.
 - `settings.feeMultiplier`: The multiplier to apply to the fee estimates. Default is `1` (a conservative approach to ensure that the fee estimates are always slightly higher than the raw estimates).
 - `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`.
@@ -84,7 +84,7 @@ You can override these options by setting the corresponding environment variable
 - `CACHE_STDTTL`: Overrides `cache.stdTTL`.
 - `CACHE_CHECKPERIOD`: Overrides `cache.checkperiod`.
 
-For example, to run the server on port 4000 and connect to a local mempool.space instance, you can start the server like this:
+For example, to run the server on port 4000 and connect to a local Mempool instance, you can start the server like this:
 
 ```bash
 PORT=4000 MEMPOOL_HOSTNAME=localhost npm start
