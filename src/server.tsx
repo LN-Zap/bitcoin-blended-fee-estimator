@@ -26,7 +26,7 @@ console.info(`Using port: ${port}`);
 console.info(`Using base URL: ${baseUrl}`);
 console.info(`Using Esplora host: ${esploraBaseUrl}`);
 console.info(`Using Mempool base URL: ${mempoolBaseUrl}`);
-console.info(`Using Mempool base URL: ${mempoolDepth}`);
+console.info(`Using Mempool estimation depth: ${mempoolDepth}`);
 console.info(`Using fee multiplier: ${feeMultiplier}`);
 console.info(`Using cache stdTTL: ${stdTTL}`);
 console.info(`Using cache checkperiod: ${checkperiod}`);
