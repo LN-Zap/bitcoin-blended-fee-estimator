@@ -15,7 +15,7 @@ type FeeByBlockTarget = {
   [key: string]: number;
 };
 
-type Data = {
+type Estimates = {
   current_block_hash: string | null;
   fee_by_block_target: FeeByBlockTarget;
 };
