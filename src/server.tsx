@@ -282,13 +282,24 @@ const Content = (props: { siteData: SiteData; estimates: Estimates }) => (
 );
 
 /**
- * Returns the current fee estimates for the Bitcoin network.
+ * Returns the current fee estimates for the Bitcoin network, rendered as HTML.
  */
 app.get('/', async (c) => {
-  var estimates = await getEstimates();
+  let estimates : Estimates | undefined;
 
-  // Set cache headers.
-  c.res.headers.set('Cache-Control', `public, max-age=${stdTTL}`)
+  try {
+    estimates = await getEstimates();
+
+    // Set cache headers.
+    c.res.headers.set('Cache-Control', `public, max-age=${stdTTL}`)
+
+  } catch (error) {
+    console.error(error);
+    estimates = {
+      current_block_hash: null,
+      fee_by_block_target: {}
+    };
+  }
 
   const props = {
     siteData: {
@@ -302,7 +313,7 @@ app.get('/', async (c) => {
 });
 
 /**
- * Returns the current fee estimates for the Bitcoin network.
+ * Returns the current fee estimates for the Bitcoin network, rendered as JSON.
  */
 app.get('/v1/fee-estimates', async (c) => {
   try {
