@@ -34,6 +34,7 @@ console.info('---');
 
 // Initialize the cache.
 const cache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
+const CACHE_KEY = 'estimates';
 
 /**
  * Fetches data from the given URL with a timeout.
@@ -134,7 +135,7 @@ async function fetchData() {
  * Gets the current fee estimates from the cache or fetches them if they are not cached.
  */
 async function getEstimates() : Promise<Estimates> {
-  let estimates: Estimates | undefined = cache.get('estimates');
+  let estimates: Estimates | undefined = cache.get(CACHE_KEY);
 
   if (!estimates) {
     const results = await fetchData();
@@ -148,7 +149,7 @@ async function getEstimates() : Promise<Estimates> {
       fee_by_block_target: feeByBlockTarget
     };
 
-    cache.set('estimates', estimates);
+    cache.set(CACHE_KEY, estimates);
   }
 
   console.debug('Got estimates', estimates);
