@@ -140,7 +140,7 @@ async function getEstimates() : Promise<Estimates> {
     const results = await fetchData();
     console.debug('Fetch tasks completed', results);
 
-    const { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates: esploraFeeEstimates } = assignResults(results);
+    const { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates } = assignResults(results);
     const feeByBlockTarget = calculateFees(mempoolFeeEstimates, esploraFeeEstimates);
 
     estimates = {
