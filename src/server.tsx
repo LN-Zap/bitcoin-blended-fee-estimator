@@ -24,7 +24,7 @@ const TIMEOUT: number = 3000;
 console.info('---');
 console.info(`Using port: ${port}`);
 console.info(`Using base URL: ${baseUrl}`);
-console.info(`Using Esplora host: ${esploraBaseUrl}`);
+console.info(`Using Esplora base URL: ${esploraBaseUrl}`);
 console.info(`Using Mempool base URL: ${mempoolBaseUrl}`);
 console.info(`Using Mempool estimation depth: ${mempoolDepth}`);
 console.info(`Using fee multiplier: ${feeMultiplier}`);
@@ -34,6 +34,7 @@ console.info('---');
 
 // Initialize the cache.
 const cache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
+const CACHE_KEY = 'estimates';
 
 /**
  * Fetches data from the given URL with a timeout.
@@ -131,6 +132,31 @@ async function fetchData() {
 }
 
 /**
+ * Gets the current fee estimates from the cache or fetches them if they are not cached.
+ */
+async function getEstimates() : Promise<Estimates> {
+  let estimates: Estimates | undefined = cache.get(CACHE_KEY);
+
+  if (!estimates) {
+    const results = await fetchData();
+    console.debug('Fetch tasks completed', results);
+
+    const { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates } = assignResults(results);
+    const feeByBlockTarget = calculateFees(mempoolFeeEstimates, esploraFeeEstimates);
+
+    estimates = {
+      current_block_hash: blocksTipHash,
+      fee_by_block_target: feeByBlockTarget
+    };
+
+    cache.set(CACHE_KEY, estimates);
+  }
+
+  console.debug('Got estimates', estimates);
+  return estimates;
+}
+
+/**
  * Assigns the results of the fetch tasks to variables.
  */
 function assignResults(results: PromiseSettledResult<any>[]) {
@@ -213,7 +239,7 @@ const Layout = (props: SiteData) => {
   )
 }
 
-const Content = (props: { siteData: SiteData; data: object }) => (
+const Content = (props: { siteData: SiteData; estimates: Estimates }) => (
   <Layout {...props.siteData}>
 
     <div style="display: flex; justify-content: center; margin-top: 26px;">
@@ -247,7 +273,7 @@ const Content = (props: { siteData: SiteData; data: object }) => (
         </pre>
 
         <pre>
-          {raw(JSON.stringify(props.data, null, 2))}
+          {raw(JSON.stringify(props.estimates, null, 2))}
         </pre>
 
       </div>
@@ -256,46 +282,48 @@ const Content = (props: { siteData: SiteData; data: object }) => (
 );
 
 /**
- * Returns the current fee estimates for the Bitcoin network.
+ * Returns the current fee estimates for the Bitcoin network, rendered as HTML.
  */
-app.get('/v1/fee-estimates', async (c) => {
+app.get('/', async (c) => {
+  let estimates : Estimates | undefined;
+
   try {
-    let data: Data | undefined = cache.get('data');
-
-    if (!data) {
-      const results = await fetchData();
-      console.debug('Fetch tasks completed', results);
-
-      const { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates: esploraFeeEstimates } = assignResults(results);
-      const feeByBlockTarget = calculateFees(mempoolFeeEstimates, esploraFeeEstimates);
-
-      data = {
-        current_block_hash: blocksTipHash,
-        fee_by_block_target: feeByBlockTarget
-      };
-
-      cache.set('data', data);
-    }
-
-    console.debug('Returning data', data);
+    estimates = await getEstimates();
 
     // Set cache headers.
     c.res.headers.set('Cache-Control', `public, max-age=${stdTTL}`)
 
-    // Return html if the request accepts it.
-    if (c.req.raw.headers.get('Accept')?.includes('text/html')) {
-      const props = {
-        siteData: {
-          title: 'Bitcoin Blended Fee Estimator',
-          subtitle: 'A blend of mempool-based and history-based Bitcoin fee estimates.',
-        },
-        data,
-      }
-      return c.html(<Content {...props} />)
-    }
+  } catch (error) {
+    console.error(error);
+    estimates = {
+      current_block_hash: null,
+      fee_by_block_target: {}
+    };
+  }
 
-    // Otherwise return json.
-    return c.json(data);
+  const props = {
+    siteData: {
+      title: 'Bitcoin Blended Fee Estimator',
+      subtitle: 'A blend of mempool-based and history-based Bitcoin fee estimates.',
+    },
+    estimates,
+  }
+
+  return c.html(<Content {...props}/>);
+});
+
+/**
+ * Returns the current fee estimates for the Bitcoin network, rendered as JSON.
+ */
+app.get('/v1/fee-estimates', async (c) => {
+  try {
+    var estimates = await getEstimates();
+
+    // Set cache headers.
+    c.res.headers.set('Cache-Control', `public, max-age=${stdTTL}`)
+
+    // Return the estimates.
+    return c.json(estimates);
 
   } catch (error) {
     console.error(error);
