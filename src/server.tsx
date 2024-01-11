@@ -206,12 +206,15 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefin
 
   if (esploraFeeEstimates) {
     for (const [blockTarget, fee] of Object.entries(esploraFeeEstimates)) {
-      if (!feeByBlockTarget.hasOwnProperty(blockTarget)) {
-        const adjustedFee = Math.round(fee * 1000 * feeMultiplier);
-        if ((!minMempoolFee || adjustedFee < minMempoolFee) && (!minFee || adjustedFee > minFee)) {
-          feeByBlockTarget[blockTarget] = adjustedFee;
-        }
-      }
+      const blockTargetInt = parseInt(blockTarget);
+      const adjustedFee = Math.round(fee * 1000 * feeMultiplier);
+
+      if (feeByBlockTarget.hasOwnProperty(blockTarget)) continue;
+      if (minMempoolFee && adjustedFee >= minMempoolFee) continue;
+      if (minFee && adjustedFee <= minFee) continue;
+      if (blockTargetInt <= mempoolDepth) continue;
+
+      feeByBlockTarget[blockTarget] = adjustedFee;
     }
   }
 
