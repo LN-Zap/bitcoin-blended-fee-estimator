@@ -157,21 +157,8 @@ function assignResults(results: PromiseSettledResult<any>[]) {
   return { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates };
 }
 
-/**
- * Calculates the fee estimates for the Bitcoin network.
- */
-function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, esploraFeeEstimates: EsploraFeeEstimates | null | undefined) {
-  let feeByBlockTarget: FeeByBlockTarget = {};
-  const minFee = mempoolFeeEstimates?.minimumFee;
-
-  feeByBlockTarget = calculateMempoolFees(mempoolFeeEstimates, feeByBlockTarget);
-  const minMempoolFee = calculateMinMempoolFee(feeByBlockTarget);
-  feeByBlockTarget = calculateEsploraFees(esploraFeeEstimates, feeByBlockTarget, minMempoolFee, minFee);
-
-  return feeByBlockTarget;
-}
-
-function calculateMempoolFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, feeByBlockTarget: FeeByBlockTarget) {
+function calculateMempoolFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined): FeeByBlockTarget {
+  const feeByBlockTarget: FeeByBlockTarget = {};
   if (mempoolFeeEstimates) {
     const blockTargetMapping: BlockTargetMapping = {
       1: 'fastestFee',
@@ -194,27 +181,53 @@ function calculateMinMempoolFee(feeByBlockTarget: FeeByBlockTarget) {
   return values.length > 0 ? Math.min(...values) : undefined;
 }
 
-function shouldSkipFee(blockTarget: string, adjustedFee: number, feeByBlockTarget: FeeByBlockTarget, minMempoolFee: number | undefined, minFee: number | undefined): boolean {
-  const blockTargetInt = parseInt(blockTarget);
-
-  if (feeByBlockTarget.hasOwnProperty(blockTarget)) return true;
-  if (minMempoolFee && adjustedFee >= minMempoolFee) return true;
-  if (minFee && adjustedFee <= minFee) return true;
-  if (blockTargetInt <= mempoolDepth) return true;
-
-  return false;
-}
-
-function calculateEsploraFees(esploraFeeEstimates: EsploraFeeEstimates | null | undefined, feeByBlockTarget: FeeByBlockTarget, minMempoolFee: number | undefined, minFee: number | undefined) {
+function calculateEsploraFees(esploraFeeEstimates: EsploraFeeEstimates | null | undefined): FeeByBlockTarget {
+  const feeByBlockTarget: FeeByBlockTarget = {};
   if (esploraFeeEstimates) {
     for (const [blockTarget, fee] of Object.entries(esploraFeeEstimates)) {
       const adjustedFee = Math.round(fee * 1000 * feeMultiplier);
-
-      if (shouldSkipFee(blockTarget, adjustedFee, feeByBlockTarget, minMempoolFee, minFee)) continue;
-
       feeByBlockTarget[blockTarget] = adjustedFee;
     }
   }
+  return feeByBlockTarget;
+}
+
+function filterEstimates(feeByBlockTarget: FeeByBlockTarget, minFee: number | undefined): FeeByBlockTarget {
+  const filteredEstimates: FeeByBlockTarget = {};
+  let lastAddedFee: number | null = null;
+
+  for (const key of Object.keys(feeByBlockTarget)) {
+    const fee = feeByBlockTarget[key];
+    if (lastAddedFee && fee >= lastAddedFee) continue;
+    if (minFee && fee < minFee) continue;
+
+    filteredEstimates[key] = fee;
+
+    lastAddedFee = fee;
+  }
+
+  return filteredEstimates;
+}
+
+function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, esploraFeeEstimates: EsploraFeeEstimates | null | undefined) {
+  let feeByBlockTarget: FeeByBlockTarget = {};
+  const minFee = (mempoolFeeEstimates?.minimumFee ?? 0) * 1000;
+
+  // Get the mempool fee estimates.
+  feeByBlockTarget = calculateMempoolFees(mempoolFeeEstimates);
+  const minMempoolFee = calculateMinMempoolFee(feeByBlockTarget);
+
+  // Add the esplora fee estimates.
+  const esploraFeeEstimatesAdjusted =  calculateEsploraFees(esploraFeeEstimates);
+  for (const [blockTarget, fee] of Object.entries(esploraFeeEstimatesAdjusted)) {
+    if (!minMempoolFee || fee < minMempoolFee) {
+      feeByBlockTarget[blockTarget] = fee;
+    }
+  }
+
+  // Filter the estimates.
+  feeByBlockTarget = filterEstimates(feeByBlockTarget, minFee);
+
   return feeByBlockTarget;
 }
 
