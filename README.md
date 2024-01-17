@@ -75,7 +75,7 @@ Here are the available configuration options:
 - `cache.stdTTL`: The standard time to live in seconds for every generated cache element. Default is `15`
 - `cache.checkperiod`: The period in seconds, used for the automatic delete check interval. Default is `20`
 
-You can override these options by setting the corresponding environment variables:
+In addition to configuring the application through the config files, you can also override these options by setting the corresponding environment variables:
 
 - `PORT`: Overrides `server.port`
 - `BASE_URL`: Overrides `server.baseUrl`
