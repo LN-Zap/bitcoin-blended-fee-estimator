@@ -1,6 +1,7 @@
 :root {
-    --main-bg-color: #000000;
-    --pre-bg-color: #1A1A1A;
+    --black-color: #000000;
+    --grey-color: #1A1A1A;
+    --light-grey-color: #ffffffa3;
     --pre-color: #E3E3E3;
     --green-color: #85d996;
     --blue-color: #a4cdfe;
@@ -9,8 +10,8 @@
 
 body {
     padding: 0;
-    margin: 0;
-    background-color: var(--main-bg-color);
+    margin: 0 10px;
+    background-color: var(--black-color);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -20,17 +21,54 @@ body {
 
 pre {
     display: block;
-    margin: auto;
     border-radius: 7px;
     padding: 16px;
-    background-color: var(--pre-bg-color);
-    overflow-x: auto;
-    margin-bottom: 16px;
+    background-color: var(--grey-color);
+    overflow-x: scroll;
     color: var(--pre-color);
 }
 
+.logo {
+    display: flex;
+    justify-content: center;
+    margin: 26px;
+
+}
+
+.content {
+    margin-left: auto;
+    margin-right: auto;
+    height: 100vh;
+}
+
+@media (max-width: 600px) {
+    .content {
+      width: 100%;
+    }
+  }
+
 .header {
-    padding-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 50px;
+    text-align: center;
+}
+
+.footer {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 0px;
+    background-color: var(--grey-color);
+    color: white;
+    text-align: center;
+    border-radius: 10px;
+    padding: 20px;
+    font-size: 12px;
+}
+
+.footer a {
+    color: var(--light-grey-color);
 }
 
 .green {
