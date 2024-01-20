@@ -8,10 +8,12 @@
     },
     "mempool": {
         "baseUrl": "MEMPOOL_BASE_URL",
+        "fallbackBaseUrl": "MEMPOOL_FALLBACK_BASE_URL",
         "depth": "MEMPOOL_DEPTH"
     },
     "esplora": {
-        "baseUrl": "ESPLORA_BASE_URL"
+        "baseUrl": "ESPLORA_BASE_URL",
+        "fallbackBaseUrl": "ESPLORA_FALLBACK_BASE_URL"
     },
     "cache": {
         "stdTTL": "CACHE_STD_TTL",

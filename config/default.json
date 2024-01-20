@@ -8,10 +8,12 @@
     },
     "mempool": {
         "baseUrl": "https://mempool.space",
+        "fallbackBaseUrl": null,
         "depth": 6
     },
     "esplora": {
-        "baseUrl": "https://blockstream.info"
+        "baseUrl": "https://blockstream.info",
+        "fallbackBaseUrl": null
     },
     "cache": {
         "stdTTL": 15,
