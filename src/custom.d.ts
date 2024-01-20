@@ -29,3 +29,5 @@ interface SiteData {
   subtitle: string,
   children?: any
 }
+
+type ExpectedResponseType = 'json' | 'text';

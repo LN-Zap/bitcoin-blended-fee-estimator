@@ -11,7 +11,9 @@ import NodeCache from 'node-cache';
 const port = config.get<number>('server.port');
 const baseUrl = config.get<number>('server.baseUrl');
 const esploraBaseUrl = config.get<string>('esplora.baseUrl');
+const esploraFallbackBaseUrl = config.get<string>('esplora.fallbackBaseUrl');
 const mempoolBaseUrl = config.get<string>('mempool.baseUrl');
+const mempoolFallbackBaseUrl = config.get<string>('mempool.fallbackBaseUrl');
 const mempoolDepth = config.get<number>('mempool.depth');
 const feeMultiplier = config.get<number>('settings.feeMultiplier');
 const stdTTL = config.get<number>('cache.stdTTL');
@@ -25,7 +27,9 @@ console.info('---');
 console.info(`Using port: ${port}`);
 console.info(`Using base URL: ${baseUrl}`);
 console.info(`Using Esplora base URL: ${esploraBaseUrl}`);
+console.info(`Using Esplora fallback base URL: ${esploraFallbackBaseUrl}`);
 console.info(`Using Mempool base URL: ${mempoolBaseUrl}`);
+console.info(`Using Mempool fallback base URL: ${mempoolFallbackBaseUrl}`);
 console.info(`Using Mempool estimation depth: ${mempoolDepth}`);
 console.info(`Using fee multiplier: ${feeMultiplier}`);
 console.info(`Using cache stdTTL: ${stdTTL}`);
@@ -37,6 +41,11 @@ const MEMPOOL_TIP_HASH_URL = `${mempoolBaseUrl}/api/blocks/tip/hash`;
 const ESPLORA_TIP_HASH_URL = `${esploraBaseUrl}/api/blocks/tip/hash`;
 const MEMPOOL_FEES_URL = `${mempoolBaseUrl}/api/v1/fees/recommended`;
 const ESPLORA_FEE_ESTIMATES_URL = `${esploraBaseUrl}/api/fee-estimates`;
+
+const MEMPOOL_TIP_HASH_URL_FALLBACK = `${mempoolFallbackBaseUrl}/api/blocks/tip/hash`;
+const ESPLORA_TIP_HASH_URL_FALLBACK = `${esploraFallbackBaseUrl}/api/blocks/tip/hash`;
+const MEMPOOL_FEES_URL_FALLBACK = `${mempoolFallbackBaseUrl}/api/v1/fees/recommended`;
+const ESPLORA_FEE_ESTIMATES_URL_FALLBACK = `${esploraFallbackBaseUrl}/api/fee-estimates`;
 
 // Initialize the cache.
 const cache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
@@ -54,27 +63,56 @@ async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise
   return Promise.race([fetchPromise, timeoutPromise]) as Promise<Response>;
 }
 
+
 /**
  * Fetches data from the given URL and returns the response as a string or object.
  */
-async function fetchAndHandle(url: string): Promise<string | object | null> {
-  try {
-    const response = await fetchWithTimeout(url, TIMEOUT);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+async function fetchAndProcess(url: string, expectedResponseType: ExpectedResponseType): Promise<string | object | null> {
+  const response = await fetchWithTimeout(url, TIMEOUT);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  console.debug(`Successfully fetched data from ${url}`);
+
+  const contentType = response.headers.get("content-type");
+  if (expectedResponseType === 'json' && contentType?.includes("application/json")) {
+    return response.json();
+  } else if (expectedResponseType === 'text' && contentType?.includes("text/plain")) {
+    const text = await response.text();
+    const trimmedText = text.trim();
+    if (trimmedText.includes('\n') || text !== trimmedText) {
+      throw new Error('Response is not a single text string with no whitespace or newlines');
     }
-    console.debug(`Successfully fetched data from ${url}`);
-    const contentType = response.headers.get("content-type");
-    if (contentType?.includes("application/json")) {
-      return await response.json();
-    } else {
-      return await response.text();
-    }
-  } catch (error) {
-    console.error(`Error fetching from ${url}:`, error);
-    return null;
+    return trimmedText;
+  } else {
+    throw new Error(`Unexpected response type. Expected ${expectedResponseType}, but received ${contentType}`);
   }
 }
+
+/**
+ * Fetches data from the given URL and returns the response as a string or object.
+ */
+async function fetchAndHandle(url: string, expectedResponseType: ExpectedResponseType, fallbackUrl?: string): Promise<string | object | null> {
+  try {
+    const timeout = new Promise((resolve) => setTimeout(resolve, TIMEOUT, 'timeout'));
+    const fetchPromise = fetchAndProcess(url, expectedResponseType);
+    const result = await Promise.race([fetchPromise, timeout]) as Promise<Response> | string;
+
+    if (result === 'timeout' || result instanceof Error) {
+      throw new Error('Fetch or timeout error');
+    }
+
+    return result;
+  } catch (error) {
+    console.info('Trying fallback URL', fallbackUrl);
+    if (fallbackUrl) {
+      return fetchAndProcess(fallbackUrl, expectedResponseType);
+    } else {
+      throw new Error(`Fetch request to ${url} failed and no fallback URL was provided.`);
+    }
+  }
+}
+
 
 // Initialize the Express app.
 const app = new Hono();
@@ -103,10 +141,10 @@ app.use('/static/*', serveStatic({ root: './' }))
  */
 async function fetchData() {
   const tasks = [
-    fetchAndHandle(MEMPOOL_TIP_HASH_URL),
-    fetchAndHandle(ESPLORA_TIP_HASH_URL),
-    fetchAndHandle(MEMPOOL_FEES_URL),
-    fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL)
+    fetchAndHandle(MEMPOOL_TIP_HASH_URL, 'text', MEMPOOL_TIP_HASH_URL_FALLBACK),
+    fetchAndHandle(ESPLORA_TIP_HASH_URL, 'text', ESPLORA_TIP_HASH_URL_FALLBACK),
+    fetchAndHandle(MEMPOOL_FEES_URL, 'json', MEMPOOL_FEES_URL_FALLBACK),
+    fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL, 'json', ESPLORA_FEE_ESTIMATES_URL_FALLBACK)
   ];
 
   return await Promise.allSettled(tasks);
