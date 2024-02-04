@@ -32,7 +32,6 @@ pre {
     display: flex;
     justify-content: center;
     margin: 26px;
-
 }
 
 .content {
@@ -50,7 +49,7 @@ pre {
 .header {
     margin-left: auto;
     margin-right: auto;
-    padding-bottom: 50px;
+    padding-bottom: 30px;
     text-align: center;
 }
 

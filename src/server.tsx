@@ -20,7 +20,7 @@ const stdTTL = config.get<number>('cache.stdTTL');
 const checkperiod = config.get<number>('cache.checkperiod');
 
 // Set the timeout for fetch requests.
-const TIMEOUT: number = 3000;
+const TIMEOUT: number = 2500;
 
 // Log the configuration values.
 console.info('---');
@@ -37,15 +37,15 @@ console.info(`Using cache checkperiod: ${checkperiod}`);
 console.info('---');
 
 // Constants
-const MEMPOOL_TIP_HASH_URL = `${mempoolBaseUrl}/api/blocks/tip/hash`;
-const ESPLORA_TIP_HASH_URL = `${esploraBaseUrl}/api/blocks/tip/hash`;
-const MEMPOOL_FEES_URL = `${mempoolBaseUrl}/api/v1/fees/recommended`;
-const ESPLORA_FEE_ESTIMATES_URL = `${esploraBaseUrl}/api/fee-estimates`;
+const MEMPOOL_TIP_HASH_URL = mempoolBaseUrl && `${mempoolBaseUrl}/api/blocks/tip/hash`;
+const ESPLORA_TIP_HASH_URL = esploraBaseUrl && `${esploraBaseUrl}/api/blocks/tip/hash`;
+const MEMPOOL_FEES_URL = mempoolBaseUrl && `${mempoolBaseUrl}/api/v1/fees/recommended`;
+const ESPLORA_FEE_ESTIMATES_URL = esploraBaseUrl && `${esploraBaseUrl}/api/fee-estimates`;
 
-const MEMPOOL_TIP_HASH_URL_FALLBACK = `${mempoolFallbackBaseUrl}/api/blocks/tip/hash`;
-const ESPLORA_TIP_HASH_URL_FALLBACK = `${esploraFallbackBaseUrl}/api/blocks/tip/hash`;
-const MEMPOOL_FEES_URL_FALLBACK = `${mempoolFallbackBaseUrl}/api/v1/fees/recommended`;
-const ESPLORA_FEE_ESTIMATES_URL_FALLBACK = `${esploraFallbackBaseUrl}/api/fee-estimates`;
+const MEMPOOL_TIP_HASH_URL_FALLBACK = mempoolFallbackBaseUrl && `${mempoolFallbackBaseUrl}/api/blocks/tip/hash`;
+const ESPLORA_TIP_HASH_URL_FALLBACK = esploraFallbackBaseUrl && `${esploraFallbackBaseUrl}/api/blocks/tip/hash`;
+const MEMPOOL_FEES_URL_FALLBACK = mempoolFallbackBaseUrl && `${mempoolFallbackBaseUrl}/api/v1/fees/recommended`;
+const ESPLORA_FEE_ESTIMATES_URL_FALLBACK = esploraFallbackBaseUrl && `${esploraFallbackBaseUrl}/api/fee-estimates`;
 
 // Initialize the cache.
 const cache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
@@ -104,8 +104,8 @@ async function fetchAndHandle(url: string, expectedResponseType: ExpectedRespons
 
     return result;
   } catch (error) {
-    console.info('Trying fallback URL', fallbackUrl);
     if (fallbackUrl) {
+      console.debug('Trying fallback URL', fallbackUrl);
       return fetchAndProcess(fallbackUrl, expectedResponseType);
     } else {
       throw new Error(`Fetch request to ${url} failed and no fallback URL was provided.`);
@@ -137,17 +137,61 @@ app.use('*', cors({
 app.use('/static/*', serveStatic({ root: './' }))
 
 /**
- * Fetches the data from the mempool and esplora APIs.
+ * Fetches mempool fees.
  */
-async function fetchData() {
+async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
   const tasks = [
-    fetchAndHandle(MEMPOOL_TIP_HASH_URL, 'text', MEMPOOL_TIP_HASH_URL_FALLBACK),
-    fetchAndHandle(ESPLORA_TIP_HASH_URL, 'text', ESPLORA_TIP_HASH_URL_FALLBACK),
-    fetchAndHandle(MEMPOOL_FEES_URL, 'json', MEMPOOL_FEES_URL_FALLBACK),
-    fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL, 'json', ESPLORA_FEE_ESTIMATES_URL_FALLBACK)
-  ];
+    MEMPOOL_FEES_URL && fetchAndHandle(MEMPOOL_FEES_URL, 'json'),
+    MEMPOOL_FEES_URL_FALLBACK && fetchAndHandle(MEMPOOL_FEES_URL_FALLBACK, 'json'),
+  ].filter(Boolean);
+  const res = await Promise.allSettled(tasks);
+  console.debug('Fetched mempool fees', res);
 
-  return await Promise.allSettled(tasks);
+  let res0 = res[0] && getValueFromFulfilledPromise(res[0]);
+  let res1 = res[1] && getValueFromFulfilledPromise(res[1]);
+
+  // If all of the response properties are 1, then the response is an error (probably the mempool data is not available).
+  const isRes0Invalid = !res0 || (Object.values(res0).every((value) => value === 1));
+  const isRes1Invalid = !res1 || (Object.values(res1).every((value) => value === 1));
+
+  // Return a response that is valid, or null if both responses are invald.
+  if (!isRes0Invalid) {
+    return res0;
+  }
+  return isRes1Invalid ? null : res1;
+}
+
+/**
+ * Fetches esplora fees.
+ */
+async function fetchEsploraFees() : Promise<EsploraFeeEstimates | null> {
+  const tasks = [
+    ESPLORA_FEE_ESTIMATES_URL && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL, 'json'),
+    ESPLORA_FEE_ESTIMATES_URL_FALLBACK && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL_FALLBACK, 'json'),
+  ].filter(Boolean);
+  const res = await Promise.allSettled(tasks);
+  console.debug('Fetched esplora fees', res);
+
+  let res0 = res[0] && getValueFromFulfilledPromise(res[0]);
+  let res1 = res[1] && getValueFromFulfilledPromise(res[1]);
+
+  return res0 || res1;
+}
+
+/**
+ * Fetches the current block hash.
+ */
+async function fetchBlocksTipHash() : Promise<string | null> {
+  const tasks = [
+    (MEMPOOL_TIP_HASH_URL || MEMPOOL_TIP_HASH_URL_FALLBACK) && fetchAndHandle(MEMPOOL_TIP_HASH_URL, 'text', MEMPOOL_TIP_HASH_URL_FALLBACK),
+    (ESPLORA_TIP_HASH_URL || ESPLORA_TIP_HASH_URL_FALLBACK) && fetchAndHandle(ESPLORA_TIP_HASH_URL, 'text', ESPLORA_TIP_HASH_URL_FALLBACK),
+  ].filter(Boolean);
+  const res = await Promise.allSettled(tasks);
+
+  let res0 = res[0] && getValueFromFulfilledPromise(res[0]);
+  let res1 = res[1] && getValueFromFulfilledPromise(res[1]);
+
+  return res0 || res1;
 }
 
 /**
@@ -157,10 +201,17 @@ async function getEstimates() : Promise<Estimates> {
   let estimates: Estimates | undefined = cache.get(CACHE_KEY);
 
   if (!estimates) {
-    const results = await fetchData();
-    console.debug('Fetch tasks completed', results);
 
-    const { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates } = assignResults(results);
+    const tasks = [
+      await fetchMempoolFees(),
+      await fetchEsploraFees(),
+      await fetchBlocksTipHash(),
+    ];
+    const [result1, result2, result3] = await Promise.allSettled(tasks);
+    const mempoolFeeEstimates = getValueFromFulfilledPromise(result1);
+    const esploraFeeEstimates = getValueFromFulfilledPromise(result2);
+    const blocksTipHash = getValueFromFulfilledPromise(result3);
+
     const feeByBlockTarget = calculateFees(mempoolFeeEstimates, esploraFeeEstimates);
 
     estimates = {
@@ -182,21 +233,9 @@ function getValueFromFulfilledPromise(result: PromiseSettledResult<any>) {
   return result.status === "fulfilled" && result.value ? result.value : null;
 }
 
-/**
- * Assigns the results of the fetch tasks to variables.
- */
-function assignResults(results: PromiseSettledResult<any>[]) {
-  const [result1, result2, result3, result4] = results;
-
-  const blocksTipHash = getValueFromFulfilledPromise(result1) || getValueFromFulfilledPromise(result2);
-  const mempoolFeeEstimates = getValueFromFulfilledPromise(result3) as MempoolFeeEstimates;
-  const esploraFeeEstimates = getValueFromFulfilledPromise(result4) as EsploraFeeEstimates;
-
-  return { blocksTipHash, mempoolFeeEstimates, esploraFeeEstimates };
-}
-
 function calculateMempoolFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined): FeeByBlockTarget {
   const feeByBlockTarget: FeeByBlockTarget = {};
+
   if (mempoolFeeEstimates) {
     const blockTargetMapping: BlockTargetMapping = {
       1: 'fastestFee',
@@ -249,7 +288,9 @@ function filterEstimates(feeByBlockTarget: FeeByBlockTarget, minFee: number | un
 
 function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, esploraFeeEstimates: EsploraFeeEstimates | null | undefined) {
   let feeByBlockTarget: FeeByBlockTarget = {};
-  const minFee = (mempoolFeeEstimates?.minimumFee ?? 0) * 1000;
+
+  // Get the minimum fee. If the mempool fee estimates are not available, use a default value of 5 sat/vbyte as a safety net.
+  const minFee = (mempoolFeeEstimates?.minimumFee ?? 5) * 1000;
 
   // Get the mempool fee estimates.
   feeByBlockTarget = calculateMempoolFees(mempoolFeeEstimates);
@@ -257,6 +298,7 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefin
 
   // Add the esplora fee estimates.
   const esploraFeeEstimatesAdjusted =  calculateEsploraFees(esploraFeeEstimates);
+
   for (const [blockTarget, fee] of Object.entries(esploraFeeEstimatesAdjusted)) {
     if (!minMempoolFee || fee < minMempoolFee) {
       feeByBlockTarget[blockTarget] = fee;
