@@ -9,7 +9,7 @@ on:
 
 jobs:
   publish:
-    runs-on: [ arc-runner-set ]
+    runs-on: "ubuntu-latest"
 
     env:
       GAR_REGISTRY: us-east1-docker.pkg.dev
