@@ -1,33 +1,48 @@
+// MempoolFeeEstimates represents the fee estimates for different transaction speeds.
 type MempoolFeeEstimates = {
-  [key: string]: number | undefined;
-  fastestFee: number;
-  halfHourFee: number;
-  hourFee: number;
-  economyFee: number;
-  minimumFee: number;
+  [key: string]: number; // dynamic keys with number as value (sat/vb)
+  fastestFee: number; // fee for the fastest transaction speed (sat/vb)
+  halfHourFee: number; // fee for half an hour transaction speed (sat/vb)
+  hourFee: number; // fee for an hour transaction speed (sat/vb)
+  economyFee: number; // fee for economy transaction speed (sat/vb)
+  minimumFee: number; // minimum relay fee (sat/vb)
 };
 
-type EsploraFeeEstimates = {
-  [key: number]: number;
-};
-
+// FeeByBlockTarget represents the fee by block target.
 type FeeByBlockTarget = {
-  [key: string]: number;
+  [key: string]: number; // fees by confirmation target
 };
 
+// Estimates represents the current block hash and fee by block target.
 type Estimates = {
-  current_block_hash: string | null;
-  fee_by_block_target: FeeByBlockTarget;
+  current_block_hash: string | null; // current block hash
+  fee_by_block_target: FeeByBlockTarget; // fee by block target (in sat/kb)
 };
 
+// BlockTargetMapping represents the mapping of block targets.
 type BlockTargetMapping = {
-  [key: number]: string;
+  [key: number]: string; // dynamic numeric keys with string as value
 };
 
+// SiteData represents the data of a site.
 interface SiteData {
-  title: string,
-  subtitle: string,
-  children?: any
-}
+  title: string, // title of the site
+  subtitle: string, // subtitle of the site
+  children?: any // children of the site (optional)
+};
 
-type ExpectedResponseType = 'json' | 'text';
+// ExpectedResponseType represents the expected response type for an http request.
+type ExpectedResponseType = 'json' | 'text'; // can be either 'json' or 'text'
+
+// BatchRequest represents a bitcoind batch request response.
+interface BitcoindRpcBatchResponse {
+  result?: EstimateSmartFeeResponse;
+  error?: any;
+};
+
+// EstimateSmartFeeResponse represents the response of the estimatesmarttee method.
+interface EstimateSmartFeeResponse {
+  feerate?: number, // estimate fee rate in BTC/kB (only present if no errors were encountered)
+  errors?: [string], // errors encountered during processing (if there are any)
+  blocks?: number // block number where estimate was found
+};

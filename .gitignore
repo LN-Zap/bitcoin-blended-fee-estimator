@@ -18,3 +18,6 @@ npm-debug.log
 
 # Ignore IntelliJ IDEA settings
 .idea/
+
+# Ignore local config files
+config/local.*

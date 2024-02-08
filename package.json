@@ -19,6 +19,7 @@
   "author": "Tom Kirkpatrick <tom@strike.me> (https://twitter.com/mrfelton)",
   "license": "MIT",
   "dependencies": {
+    "bitcoind-rpc": "0.9.1",
     "config": "3.3.9",
     "hono": "3.11.12",
     "node-cache": "5.1.2"
