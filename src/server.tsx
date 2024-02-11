@@ -417,3 +417,8 @@ export default {
   port,
   fetch: app.fetch,
 }
+
+process.on('SIGINT', function() {
+  console.info("Caught interrupt signal. Exiting.");
+  process.exit();
+});
