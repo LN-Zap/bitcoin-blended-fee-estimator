@@ -33,15 +33,25 @@ const CACHE_STDTTL = config.get<number>('cache.stdTTL');
 const CACHE_CHECKPERIOD = config.get<number>('cache.checkperiod');
 
 let logger : Logger;
-if (process.env.NODE_ENV !== 'production') {
+const pinoOptions = {
+  level: LOGLEVEL,
+  messageKey: 'message',
+  formatters: {
+    level: (label: string) => {
+      return { level: label };
+    }
+  }
+}
+if (process.env.NODE_ENV === 'production') {
+  logger = pino(pinoOptions);
+}
+else {
   try {
     const pretty = require('pino-pretty');
-    logger = pino({ level: LOGLEVEL }, pretty());
+    logger = pino(pinoOptions, pretty());
   } catch (error) {
-    logger = pino({ level: LOGLEVEL });
+    logger = pino(pinoOptions);
   }
-} else {
-  logger = pino({ level: LOGLEVEL });
 }
 
 // Log the configuration values.
@@ -114,7 +124,7 @@ async function fetchAndProcess(url: string, expectedResponseType: ExpectedRespon
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  logger.debug({message: `Successfully fetched data from ${url}` });
+  logger.debug({ message: `Successfully fetched data from ${url}` });
 
   const contentType = response.headers.get("content-type");
   if (expectedResponseType === 'json' && contentType?.includes("application/json")) {
@@ -506,12 +516,10 @@ app.get('/health/live', async (c) => {
 });
 
 // Add middleware.
-app.use('*', honoLogger())
-app.use('*', etag())
-app.use('*', cors({
-  origin: '*',
-}))
-app.use('/static/*', serveStatic({ root: './' }))
+app.use('*', honoLogger());
+app.use('*', etag());
+app.use('*', cors({ origin: '*' }));
+app.use('/static/*', serveStatic({ root: './' }));
 
 // Define the routes.
 
