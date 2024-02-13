@@ -150,6 +150,10 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
     MEMPOOL_FEES_URL && fetchAndHandle(MEMPOOL_FEES_URL, 'json'),
     MEMPOOL_FEES_URL_FALLBACK && fetchAndHandle(MEMPOOL_FEES_URL_FALLBACK, 'json'),
   ].filter(Boolean);
+  if (tasks.length === 0) {
+    return null;
+  }
+
   const data = await Promise.allSettled(tasks);
   console.debug({ message: 'Fetched data from mempool: {data}', data });
 
@@ -175,6 +179,10 @@ async function fetchEsploraFees() : Promise<FeeByBlockTarget | null> {
     ESPLORA_FEE_ESTIMATES_URL && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL, 'json'),
     ESPLORA_FEE_ESTIMATES_URL_FALLBACK && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL_FALLBACK, 'json'),
   ].filter(Boolean);
+  if (tasks.length === 0) {
+    return null;
+  }
+
   const data = await Promise.allSettled(tasks);
   console.debug({ message: 'Fetched data from esplora: {data}', data });
 
