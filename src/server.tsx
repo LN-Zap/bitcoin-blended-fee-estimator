@@ -178,7 +178,7 @@ async function fetchMempoolData() : Promise<MempoolFeeEstimates | null> {
   const isRes1Invalid = !res1 || (Object.values(res1).every((value) => value === 1));
 
   // Return a response that is valid, or null if both responses are invald.
-  let data : MempoolFeeEstimates;
+  let data
   if (!isRes0Invalid) {
     data = res0;
   } else {
@@ -205,7 +205,7 @@ async function fetchEsploraData() : Promise<FeeByBlockTarget | null> {
   let res0 = getValueFromFulfilledPromise(results[0]);
   let res1 = getValueFromFulfilledPromise(results[1]);
 
-  const data: FeeByBlockTarget = res0 || res1 || null;
+  const data = res0 || res1 || null;
   logger.info({ message: 'Using data from esplora: {data}', data });
   return data;
 }
