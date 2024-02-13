@@ -424,14 +424,14 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates, esploraFeeEstim
   const minFee = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
   logger.debug({ message: 'Using minimum fee: {minFee}', minFee });
 
-  // If we didn't manage to get any fee estimates, return a single estimate with the minimum fee.
-  if (Object.keys(feeByBlockTarget).length === 0) {
-    return { 1: minFee }
-  }
-
-  // Return fees filterd to remove any that are lower than the determined minimum fee.
   if (minFee) {
-    return filterEstimates(feeByBlockTarget, minFee);
+    // Filter the estimates to remove any that are lower than the desired minimum fee.
+    feeByBlockTarget = filterEstimates(feeByBlockTarget, minFee);
+
+    // If we didn't manage to get any fee estimates, return a single estimate with the minimum fee.
+    if (Object.keys(feeByBlockTarget).length === 0) {
+      feeByBlockTarget = { 1: minFee }
+    }
   }
 
   return feeByBlockTarget;
