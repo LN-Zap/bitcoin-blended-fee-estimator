@@ -24,6 +24,7 @@ const BITCOIND_BASE_URL = config.get<string>('bitcoind.baseUrl');
 const BITCOIND_USERNAME = config.get<string>('bitcoind.username');
 const BITCOIND_PASSWORD = config.get<number>('bitcoind.password');
 const BITCOIND_CONF_TARGETS = config.get<number[]>('bitcoind.confTargets');
+const BITCOIND_ESTIMATE_MODE = config.get<EstimateMode>('bitcoind.estimateMode');
 
 const LOGLEVEL = config.get<string>('settings.loglevel');
 const TIMEOUT = config.get<number>('settings.timeout');
@@ -252,7 +253,7 @@ async function fetchBitcoindData() : Promise<FeeByBlockTarget | null> {
 
     function batchCall() {
       targets.forEach(function (target) {
-        rpc.estimatesmartfee(target);
+        rpc.estimatesmartfee(target, BITCOIND_ESTIMATE_MODE);
       });
     }
 

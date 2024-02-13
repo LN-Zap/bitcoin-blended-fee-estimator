@@ -22,7 +22,8 @@
         "baseUrl": "BITCOIND_BASE_URL",
         "username": "BITCOIND_USERNAME",
         "password": "BITCOIND_PASSWORD",
-        "confTargets": "BITCOIND_CONF_TARGETS"
+        "confTargets": "BITCOIND_CONF_TARGETS",
+        "estimateMode": "BITCOIND_ESTIMATE_MODE"
     },
     "cache": {
         "stdTTL": "CACHE_STD_TTL",
