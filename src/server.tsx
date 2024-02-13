@@ -81,12 +81,6 @@ function getValueFromFulfilledPromise(result: PromiseSettledResult<any>) {
   return result && result.status === "fulfilled" && result.value ? result.value : null;
 }
 
-function customRound(number: number, decimalPlaces: number): number {
-  const factor: number = Math.pow(10, decimalPlaces);
-  const rounded: number = Math.round(number * factor) / factor;
-  return rounded;
-}
-
 // NOTE: fetch signal abortcontroller does not work on Bun.
 // See https://github.com/oven-sh/bun/issues/2489
 async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise<Response> {
@@ -235,7 +229,7 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
           var feeRate = response[i].result?.feerate;
           if (feeRate) {
             // convert the returned value to satoshis, as it's currently returned in BTC.
-            const satPerKB = customRound(feeRate, 1e8);
+            const satPerKB : number = feeRate * 1e8;
             result[target] = applyFeeMultiplier(satPerKB);
           } else {
             console.error(`Failed to fetch fee estimate from bitcoind for confirmation target ${target}`, response[i].result?.errors);
