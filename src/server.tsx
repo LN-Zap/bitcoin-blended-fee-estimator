@@ -422,9 +422,9 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates, esploraFeeEstim
 
   // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
   const minFee = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
-  logger.debug({ message: 'Using minimum fee: {minFee}', minFee });
-
   if (minFee) {
+    logger.info({ message: 'Using minimum fee: {minFee}', minFee });
+
     // Filter the estimates to remove any that are lower than the desired minimum fee.
     feeByBlockTarget = filterEstimates(feeByBlockTarget, minFee);
 
