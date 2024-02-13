@@ -246,8 +246,7 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
           var feeRate = response[i].result?.feerate;
           if (feeRate) {
             // convert the returned value to satoshis, as it's currently returned in BTC.
-            const satPerKB : number = feeRate * 1e8;
-            data[target] = applyFeeMultiplier(satPerKB);
+            data[target] = feeRate * 1e8;
           } else {
             logger.error({ message: `Failed to fetch fee estimate from bitcoind for confirmation target ${target}: {errors}`,
               errors: response[i].result?.errors});
@@ -262,12 +261,14 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
 
 function processEstimates(estimates: FeeByBlockTarget, applyMultiplier = true, convert = false) : FeeByBlockTarget {
   for (const [blockTarget, fee] of Object.entries(estimates) as [string, number][]) {
+    let estimate = fee;
     if (applyMultiplier) {
-      estimates[blockTarget] = applyFeeMultiplier(fee);
+      estimate = applyFeeMultiplier(fee);
     }
     if (convert) {
-      estimates[blockTarget] = Math.ceil(fee * 1000);
+      estimate = Math.ceil(estimate * 1000);
     }
+    estimates[blockTarget] = estimate;
   }
   return estimates;
 }
