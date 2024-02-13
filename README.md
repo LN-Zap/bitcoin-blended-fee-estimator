@@ -72,6 +72,7 @@ Here are the available configuration options:
 | --- | --- | --- | --- |
 | `server.port` | The port on which the server runs | `3000` | `PORT` |
 | `server.baseUrl` | The base url port on which the server is accessible | `http://localhost:3000` | `BASE_URL` |
+| `settings.logLevel` | The log level to use for the application | `debug` | `LOGLEVEL` |
 | `settings.timeout` | Timeout to use when fetching data (ms) | `5000` | `TIMEOUT` |
 | `settings.feeMultiplier` | The multiplier to apply to the fee estimates | `1` | `FEE_MULTIPLIER` |
 | `settings.feeMinimum` | The minimum fee (sat/vB) to use for fee estimates if we could not determine from a configured data source | `2` | `FEE_MINIMUM` |

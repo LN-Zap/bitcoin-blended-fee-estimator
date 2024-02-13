@@ -1,12 +1,13 @@
 import { Hono } from 'hono'
 import { raw } from 'hono/html'
-import { logger } from 'hono/logger'
+import { logger as honoLogger } from 'hono/logger'
 import { etag } from 'hono/etag'
 import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/bun'
 import config from 'config'
 import NodeCache from 'node-cache';
 import RpcClient from 'bitcoind-rpc'
+import pino, { type Logger } from 'pino'
 
 // Get application configuration values from the config package.
 const PORT = config.get<number>('server.port');
@@ -24,15 +25,23 @@ const BITCOIND_USERNAME = config.get<string>('bitcoind.username');
 const BITCOIND_PASSWORD = config.get<number>('bitcoind.password');
 const BITCOIND_CONF_TARGETS = config.get<number[]>('bitcoind.confTargets');
 
+const LOGLEVEL = config.get<string>('settings.loglevel');
 const TIMEOUT = config.get<number>('settings.timeout');
 const FEE_MULTIPLIER = config.get<number>('settings.feeMultiplier');
 const FEE_MINIMUM = config.get<number>('settings.feeMinimum');
 const CACHE_STDTTL = config.get<number>('cache.stdTTL');
 const CACHE_CHECKPERIOD = config.get<number>('cache.checkperiod');
 
+let logger : Logger;
+if (process.env['NODE_ENV'] !== 'production') {
+  const pretty = require('pino-pretty');
+  logger = pino({ level: LOGLEVEL }, pretty());
+} else {
+  logger = pino({ level: LOGLEVEL });
+}
 
 // Log the configuration values.
-console.info(JSON.stringify({
+logger.info({
   mempoolSettings: {
     baseUrl: MEMPOOL_BASE_URL,
     fallbackBaseUrl: MEMPOOL_FALLBACK_BASE_URL,
@@ -56,7 +65,7 @@ console.info(JSON.stringify({
     cacheStdTTL: CACHE_STDTTL,
     cacheCheckPeriod: CACHE_CHECKPERIOD
   }
-}));
+});
 
 // Constants
 const MEMPOOL_TIP_HASH_URL = MEMPOOL_BASE_URL && `${MEMPOOL_BASE_URL}/api/blocks/tip/hash`;
@@ -84,7 +93,7 @@ function getValueFromFulfilledPromise(result: PromiseSettledResult<any>) {
 // NOTE: fetch signal abortcontroller does not work on Bun.
 // See https://github.com/oven-sh/bun/issues/2489
 async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise<Response> {
-  console.debug({ message: `Starting fetch request to ${url}` });
+  logger.debug({ message: `Starting fetch request to ${url}` });
   const fetchPromise = fetch(url);
   const timeoutPromise = new Promise((_, reject) => 
     setTimeout(() => reject(new Error(`Request timed out after ${timeout} ms`)), timeout)
@@ -101,7 +110,7 @@ async function fetchAndProcess(url: string, expectedResponseType: ExpectedRespon
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  console.debug({message: `Successfully fetched data from ${url}` });
+  logger.debug({message: `Successfully fetched data from ${url}` });
 
   const contentType = response.headers.get("content-type");
   if (expectedResponseType === 'json' && contentType?.includes("application/json")) {
@@ -134,7 +143,7 @@ async function fetchAndHandle(url: string, expectedResponseType: ExpectedRespons
     return result;
   } catch (error) {
     if (fallbackUrl) {
-      console.debug({ message: 'Trying fallback URL: ${fallbackUrl}' });
+      logger.debug({ message: 'Trying fallback URL: ${fallbackUrl}' });
       return fetchAndProcess(fallbackUrl, expectedResponseType);
     } else {
       throw new Error(`Fetch request to ${url} failed and no fallback URL was provided.`);
@@ -155,7 +164,7 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
   }
 
   const data = await Promise.allSettled(tasks);
-  console.debug({ message: 'Fetched data from mempool: {data}', data });
+  logger.debug({ message: 'Fetched data from mempool: {data}', data });
 
   let res0 = getValueFromFulfilledPromise(data[0]);
   let res1 = getValueFromFulfilledPromise(data[1]);
@@ -184,7 +193,7 @@ async function fetchEsploraFees() : Promise<FeeByBlockTarget | null> {
   }
 
   const data = await Promise.allSettled(tasks);
-  console.debug({ message: 'Fetched data from esplora: {data}', data });
+  logger.debug({ message: 'Fetched data from esplora: {data}', data });
 
   let res0 = getValueFromFulfilledPromise(data[0]);
   let res1 = getValueFromFulfilledPromise(data[1]);
@@ -230,7 +239,7 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
 
     rpc.batch(batchCall, (error: Error | null, response: BitcoindRpcBatchResponse[]) => {
       if (error) {
-        console.error({ message: 'Unable to fetch fee estimates from bitcoind: {error}', error });
+        logger.error({ message: 'Unable to fetch fee estimates from bitcoind: {error}', error });
         resolve(null);
       } else {
         targets.forEach((target, i) => {  
@@ -240,11 +249,11 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
             const satPerKB : number = feeRate * 1e8;
             data[target] = applyFeeMultiplier(satPerKB);
           } else {
-            console.error({ message: `Failed to fetch fee estimate from bitcoind for confirmation target ${target}: {errors}`,
+            logger.error({ message: `Failed to fetch fee estimate from bitcoind for confirmation target ${target}: {errors}`,
               errors: response[i].result?.errors});
           }
         });
-        console.debug({ message: 'Fetched data from bitcoind: {data}', data });
+        logger.debug({ message: 'Fetched data from bitcoind: {data}', data });
         resolve(data);
       }
     });
@@ -286,7 +295,7 @@ async function getEstimates() : Promise<Estimates> {
   let estimates: Estimates | undefined = cache.get(CACHE_KEY);
 
   if (estimates) {
-    console.info({ message: 'Got estimates from cache: ${estimates}', estimates });
+    logger.info({ message: 'Got estimates from cache: ${estimates}', estimates });
     return estimates;
   }
 
@@ -309,7 +318,7 @@ async function getEstimates() : Promise<Estimates> {
 
   cache.set(CACHE_KEY, estimates);
 
-  console.info({ message: 'Got estimates: {estimates}', estimates });
+  logger.info({ message: 'Got estimates: {estimates}', estimates });
   return estimates;
 }
 
@@ -403,7 +412,7 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates, esploraFeeEstim
 
   // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
   const minFee = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
-  console.debug({ message: 'Using minimum fee: {minFee}', minFee });
+  logger.debug({ message: 'Using minimum fee: {minFee}', minFee });
 
   // Return fees filterd to remove any that are lower than the determined minimum fee.
   if (minFee) {
@@ -469,7 +478,7 @@ const Content = (props: { siteData: SiteData; estimates: Estimates }) => (
 
 // Initialize the Express app.
 const app = new Hono();
-console.info(`Fee Estimates available at ${BASE_URL}/v1/fee-estimates`);
+logger.info(`Fee Estimates available at ${BASE_URL}/v1/fee-estimates`);
 
 // Add a health/ready endpoint.
 app.get('/health/ready', async (c) => {
@@ -482,7 +491,7 @@ app.get('/health/live', async (c) => {
 });
 
 // Add middleware.
-app.use('*', logger())
+app.use('*', honoLogger())
 app.use('*', etag())
 app.use('*', cors({
   origin: '*',
@@ -504,7 +513,7 @@ app.get('/', async (c) => {
     c.res.headers.set('Cache-Control', `public, max-age=${CACHE_STDTTL}`)
 
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     estimates = {
       current_block_hash: null,
       fee_by_block_target: {}
@@ -536,7 +545,7 @@ app.get('/v1/fee-estimates', async (c) => {
     return c.json(estimates);
 
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return c.text('Error fetching fee estimates', 500);
   }
 });
@@ -547,6 +556,6 @@ export default {
 }
 
 process.on('SIGINT', function() {
-  console.info({ message: "Caught interrupt signal. Exiting." });
+  logger.info({ message: "Caught interrupt signal. Exiting." });
   process.exit();
 });
