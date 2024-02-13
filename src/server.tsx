@@ -168,6 +168,8 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
   }
 
   const results = await Promise.allSettled(tasks);
+  logger.debug({ message: 'Fetched data from mempool: {results}', results });
+
   let res0 = getValueFromFulfilledPromise(results[0]);
   let res1 = getValueFromFulfilledPromise(results[1]);
 
@@ -182,7 +184,7 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
   } else {
     data = isRes1Invalid ? null : res1;
   }
-  logger.debug({ message: 'Fetched data from mempool: {data}', data });
+  logger.info({ message: 'Got data from mempool: {data}', data });
   return data;
 }
 
@@ -198,11 +200,13 @@ async function fetchEsploraFees() : Promise<FeeByBlockTarget | null> {
     return null;
   }
   const results = await Promise.allSettled(tasks);
+  logger.debug({ message: 'Fetched data from mempool: {results}', results });
+
   let res0 = getValueFromFulfilledPromise(results[0]);
   let res1 = getValueFromFulfilledPromise(results[1]);
 
   const data: FeeByBlockTarget = res0 || res1 || null;
-  logger.debug({ message: 'Fetched data from esplora: {data}', data });
+  logger.info({ message: 'Got data from esplora: {data}', data });
   return data;
 }
 
@@ -257,7 +261,7 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
               errors: response[i].result?.errors});
           }
         });
-        logger.debug({ message: 'Fetched data from bitcoind: {data}', data });
+        logger.info({ message: 'Got data from bitcoind: {data}', data });
         resolve(data);
       }
     });
