@@ -9,8 +9,6 @@ jobs:
     runs-on: "ubuntu-latest"
 
     env:
-      GAR_REGISTRY: us-east1-docker.pkg.dev
-      GAR_IMAGE: zap-strike-infrastructure/zap-container-registry/bitcoin-blended-fee-estimator
       DOCKERHUB_IMAGE: lnzap/bitcoin-blended-fee-estimator
 
     steps:
@@ -19,12 +17,6 @@ jobs:
 
       - name: Set version
         run: echo "VERSION=$(echo ${{ github.ref }} | awk -F 'v' '{print $2}')" >> $GITHUB_ENV
-
-      - name: 'Setup Google Artifact Registry'
-        uses: LN-Zap/zap-github-actions/.github/actions/setup-google-artifact-registry@master
-        with:
-          registry: us-east1-docker.pkg.dev
-          credentials: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_ARTIFACT_REGISTRY }}
 
       - name: Dockerhub login
         run: "docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }}"
@@ -35,10 +27,8 @@ jobs:
         with:
           push: true
           tags: |
-            ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:${{ env.VERSION }}
-            ${{ env.GAR_REGISTRY }}/${{ env.GAR_IMAGE }}:latest
             ${{ env.DOCKERHUB_IMAGE }}:latest
             ${{ env.DOCKERHUB_IMAGE }}:${{ env.VERSION }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
-          cache-to: type=gha,mode=min
+          cache-to: type=gha,mode=max
