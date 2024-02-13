@@ -167,21 +167,23 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
     return null;
   }
 
-  const data = await Promise.allSettled(tasks);
-  logger.debug({ message: 'Fetched data from mempool: {data}', data });
-
-  let res0 = getValueFromFulfilledPromise(data[0]);
-  let res1 = getValueFromFulfilledPromise(data[1]);
+  const results = await Promise.allSettled(tasks);
+  let res0 = getValueFromFulfilledPromise(results[0]);
+  let res1 = getValueFromFulfilledPromise(results[1]);
 
   // If all of the response properties are 1, then the response is an error (probably the mempool data is not available).
   const isRes0Invalid = !res0 || (Object.values(res0).every((value) => value === 1));
   const isRes1Invalid = !res1 || (Object.values(res1).every((value) => value === 1));
 
   // Return a response that is valid, or null if both responses are invald.
+  let data : MempoolFeeEstimates;
   if (!isRes0Invalid) {
-    return res0;
+    data = res0;
+  } else {
+    data = isRes1Invalid ? null : res1;
   }
-  return isRes1Invalid ? null : res1;
+  logger.debug({ message: 'Fetched data from mempool: {data}', data });
+  return data;
 }
 
 /**
@@ -195,14 +197,13 @@ async function fetchEsploraFees() : Promise<FeeByBlockTarget | null> {
   if (tasks.length === 0) {
     return null;
   }
+  const results = await Promise.allSettled(tasks);
+  let res0 = getValueFromFulfilledPromise(results[0]);
+  let res1 = getValueFromFulfilledPromise(results[1]);
 
-  const data = await Promise.allSettled(tasks);
+  const data: FeeByBlockTarget = res0 || res1 || null;
   logger.debug({ message: 'Fetched data from esplora: {data}', data });
-
-  let res0 = getValueFromFulfilledPromise(data[0]);
-  let res1 = getValueFromFulfilledPromise(data[1]);
-
-  return res0 || res1 || null;
+  return data;
 }
 
 /**
