@@ -150,11 +150,11 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
     MEMPOOL_FEES_URL && fetchAndHandle(MEMPOOL_FEES_URL, 'json'),
     MEMPOOL_FEES_URL_FALLBACK && fetchAndHandle(MEMPOOL_FEES_URL_FALLBACK, 'json'),
   ].filter(Boolean);
-  const res = await Promise.allSettled(tasks);
-  console.debug('Fetched mempool fees', res);
+  const data = await Promise.allSettled(tasks);
+  console.debug({ message: 'Fetched data from mempool: {data}', data });
 
-  let res0 = getValueFromFulfilledPromise(res[0]);
-  let res1 = getValueFromFulfilledPromise(res[1]);
+  let res0 = getValueFromFulfilledPromise(data[0]);
+  let res1 = getValueFromFulfilledPromise(data[1]);
 
   // If all of the response properties are 1, then the response is an error (probably the mempool data is not available).
   const isRes0Invalid = !res0 || (Object.values(res0).every((value) => value === 1));
@@ -175,11 +175,11 @@ async function fetchEsploraFees() : Promise<FeeByBlockTarget | null> {
     ESPLORA_FEE_ESTIMATES_URL && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL, 'json'),
     ESPLORA_FEE_ESTIMATES_URL_FALLBACK && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL_FALLBACK, 'json'),
   ].filter(Boolean);
-  const res = await Promise.allSettled(tasks);
-  console.debug('Fetched esplora fees', res);
+  const data = await Promise.allSettled(tasks);
+  console.debug({ message: 'Fetched data from esplora: {data}', data });
 
-  let res0 = getValueFromFulfilledPromise(res[0]);
-  let res1 = getValueFromFulfilledPromise(res[1]);
+  let res0 = getValueFromFulfilledPromise(data[0]);
+  let res1 = getValueFromFulfilledPromise(data[1]);
 
   return res0 || res1 || null;
 }
@@ -193,7 +193,7 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
   }
 
   return new Promise((resolve, _) => {
-    var result : FeeByBlockTarget = {};
+    var data : FeeByBlockTarget = {};
 
     // Define the targets for which to fetch fee estimates.
     const targets = BITCOIND_CONF_TARGETS;
@@ -230,13 +230,13 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
           if (feeRate) {
             // convert the returned value to satoshis, as it's currently returned in BTC.
             const satPerKB : number = feeRate * 1e8;
-            result[target] = applyFeeMultiplier(satPerKB);
+            data[target] = applyFeeMultiplier(satPerKB);
           } else {
             console.error(`Failed to fetch fee estimate from bitcoind for confirmation target ${target}`, response[i].result?.errors);
           }
         });
-        console.debug('Fetched bitcoind fees', result);
-        resolve(result);
+        console.debug({ message: 'Fetched data from bitcoind: {data}', data });
+        resolve(data);
       }
     });
   });
@@ -277,7 +277,7 @@ async function getEstimates() : Promise<Estimates> {
   let estimates: Estimates | undefined = cache.get(CACHE_KEY);
 
   if (estimates) {
-    console.info('Got estimates (from cache)', estimates);
+    console.info({ message: 'Got estimates from cache: ${estimates}', estimates });
     return estimates;
   }
 
@@ -300,7 +300,7 @@ async function getEstimates() : Promise<Estimates> {
 
   cache.set(CACHE_KEY, estimates);
 
-  console.info('Got estimates', estimates);
+  console.info({ message: 'Got estimates: {estimates}', estimates });
   return estimates;
 }
 
