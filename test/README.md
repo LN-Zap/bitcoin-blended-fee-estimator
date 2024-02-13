@@ -9,7 +9,7 @@ cd test/fixtures && docker-compose up
 To fill the mempool, exec onto the container and run the `init.sh` script:
 
 ```bash
-docker exec bitcoin-blended-fee-estimator-bitcoind-1 bash
+docker exec -it bitcoin-blended-fee-estimator-bitcoind-1 bash
 /init.sh
 ```
 

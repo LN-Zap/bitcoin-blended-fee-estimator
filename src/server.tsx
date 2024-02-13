@@ -84,7 +84,7 @@ function getValueFromFulfilledPromise(result: PromiseSettledResult<any>) {
 // NOTE: fetch signal abortcontroller does not work on Bun.
 // See https://github.com/oven-sh/bun/issues/2489
 async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise<Response> {
-  console.debug(`Starting fetch request to ${url}`);
+  console.debug({ message: `Starting fetch request to ${url}` });
   const fetchPromise = fetch(url);
   const timeoutPromise = new Promise((_, reject) => 
     setTimeout(() => reject(new Error(`Request timed out after ${timeout} ms`)), timeout)
@@ -101,7 +101,7 @@ async function fetchAndProcess(url: string, expectedResponseType: ExpectedRespon
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  console.debug(`Successfully fetched data from ${url}`);
+  console.debug({message: `Successfully fetched data from ${url}` });
 
   const contentType = response.headers.get("content-type");
   if (expectedResponseType === 'json' && contentType?.includes("application/json")) {
@@ -134,7 +134,7 @@ async function fetchAndHandle(url: string, expectedResponseType: ExpectedRespons
     return result;
   } catch (error) {
     if (fallbackUrl) {
-      console.debug('Trying fallback URL', fallbackUrl);
+      console.debug({ message: 'Trying fallback URL: ${fallbackUrl}' });
       return fetchAndProcess(fallbackUrl, expectedResponseType);
     } else {
       throw new Error(`Fetch request to ${url} failed and no fallback URL was provided.`);
@@ -150,11 +150,15 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
     MEMPOOL_FEES_URL && fetchAndHandle(MEMPOOL_FEES_URL, 'json'),
     MEMPOOL_FEES_URL_FALLBACK && fetchAndHandle(MEMPOOL_FEES_URL_FALLBACK, 'json'),
   ].filter(Boolean);
-  const res = await Promise.allSettled(tasks);
-  console.debug('Fetched mempool fees', res);
+  if (tasks.length === 0) {
+    return null;
+  }
 
-  let res0 = getValueFromFulfilledPromise(res[0]);
-  let res1 = getValueFromFulfilledPromise(res[1]);
+  const data = await Promise.allSettled(tasks);
+  console.debug({ message: 'Fetched data from mempool: {data}', data });
+
+  let res0 = getValueFromFulfilledPromise(data[0]);
+  let res1 = getValueFromFulfilledPromise(data[1]);
 
   // If all of the response properties are 1, then the response is an error (probably the mempool data is not available).
   const isRes0Invalid = !res0 || (Object.values(res0).every((value) => value === 1));
@@ -175,11 +179,15 @@ async function fetchEsploraFees() : Promise<FeeByBlockTarget | null> {
     ESPLORA_FEE_ESTIMATES_URL && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL, 'json'),
     ESPLORA_FEE_ESTIMATES_URL_FALLBACK && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL_FALLBACK, 'json'),
   ].filter(Boolean);
-  const res = await Promise.allSettled(tasks);
-  console.debug('Fetched esplora fees', res);
+  if (tasks.length === 0) {
+    return null;
+  }
 
-  let res0 = getValueFromFulfilledPromise(res[0]);
-  let res1 = getValueFromFulfilledPromise(res[1]);
+  const data = await Promise.allSettled(tasks);
+  console.debug({ message: 'Fetched data from esplora: {data}', data });
+
+  let res0 = getValueFromFulfilledPromise(data[0]);
+  let res1 = getValueFromFulfilledPromise(data[1]);
 
   return res0 || res1 || null;
 }
@@ -193,7 +201,7 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
   }
 
   return new Promise((resolve, _) => {
-    var result : FeeByBlockTarget = {};
+    var data : FeeByBlockTarget = {};
 
     // Define the targets for which to fetch fee estimates.
     const targets = BITCOIND_CONF_TARGETS;
@@ -220,9 +228,9 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
       });
     }
 
-    rpc.batch(batchCall, (err: Error | null, response: BitcoindRpcBatchResponse[]) => {
-      if (err) {
-        console.error('Unable to fetch fee estimates from bitcoind', err);
+    rpc.batch(batchCall, (error: Error | null, response: BitcoindRpcBatchResponse[]) => {
+      if (error) {
+        console.error({ message: 'Unable to fetch fee estimates from bitcoind: {error}', error });
         resolve(null);
       } else {
         targets.forEach((target, i) => {  
@@ -230,13 +238,14 @@ async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
           if (feeRate) {
             // convert the returned value to satoshis, as it's currently returned in BTC.
             const satPerKB : number = feeRate * 1e8;
-            result[target] = applyFeeMultiplier(satPerKB);
+            data[target] = applyFeeMultiplier(satPerKB);
           } else {
-            console.error(`Failed to fetch fee estimate from bitcoind for confirmation target ${target}`, response[i].result?.errors);
+            console.error({ message: `Failed to fetch fee estimate from bitcoind for confirmation target ${target}: {errors}`,
+              errors: response[i].result?.errors});
           }
         });
-        console.debug('Fetched bitcoind fees', result);
-        resolve(result);
+        console.debug({ message: 'Fetched data from bitcoind: {data}', data });
+        resolve(data);
       }
     });
   });
@@ -277,7 +286,7 @@ async function getEstimates() : Promise<Estimates> {
   let estimates: Estimates | undefined = cache.get(CACHE_KEY);
 
   if (estimates) {
-    console.info('Got estimates (from cache)', estimates);
+    console.info({ message: 'Got estimates from cache: ${estimates}', estimates });
     return estimates;
   }
 
@@ -300,7 +309,7 @@ async function getEstimates() : Promise<Estimates> {
 
   cache.set(CACHE_KEY, estimates);
 
-  console.info('Got estimates', estimates);
+  console.info({ message: 'Got estimates: {estimates}', estimates });
   return estimates;
 }
 
@@ -394,7 +403,7 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates, esploraFeeEstim
 
   // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
   const minFee = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
-  console.debug('Using minimum fee:', minFee);
+  console.debug({ message: 'Using minimum fee: {minFee}', minFee });
 
   // Return fees filterd to remove any that are lower than the determined minimum fee.
   if (minFee) {
@@ -538,6 +547,6 @@ export default {
 }
 
 process.on('SIGINT', function() {
-  console.info("Caught interrupt signal. Exiting.");
+  console.info({ message: "Caught interrupt signal. Exiting." });
   process.exit();
 });
