@@ -33,10 +33,14 @@ const CACHE_STDTTL = config.get<number>('cache.stdTTL');
 const CACHE_CHECKPERIOD = config.get<number>('cache.checkperiod');
 
 let logger : Logger;
-try {
-  const pretty = require('pino-pretty');
-  logger = pino({ level: LOGLEVEL }, pretty());
-} catch (error) {
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    const pretty = require('pino-pretty');
+    logger = pino({ level: LOGLEVEL }, pretty());
+  } catch (error) {
+    logger = pino({ level: LOGLEVEL });
+  }
+} else {
   logger = pino({ level: LOGLEVEL });
 }
 
