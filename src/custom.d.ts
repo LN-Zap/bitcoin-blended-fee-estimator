@@ -46,3 +46,6 @@ interface EstimateSmartFeeResponse {
   errors?: [string], // errors encountered during processing (if there are any)
   blocks?: number // block number where estimate was found
 };
+
+// EstimateMode represents the mode for fee estimation.
+type EstimateMode = 'ECONOMICAL' | 'CONSERVATIVE'; // estimate mode can be either 'ECONOMICAL' or 'CONSERVATIVE'
