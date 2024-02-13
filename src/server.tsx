@@ -401,7 +401,7 @@ function addFeeEstimates(feeByBlockTarget: FeeByBlockTarget, feeEstimates: FeeBy
   const lowestFee = getLowestFee(feeByBlockTarget)
   for (const [blockTarget, fee] of Object.entries(feeEstimates)) {
     if (!lowestFee || fee < lowestFee) {
-      feeByBlockTarget[blockTarget] = fee;
+      feeByBlockTarget[blockTarget] = Math.ceil(fee);
     }
   }
 }
