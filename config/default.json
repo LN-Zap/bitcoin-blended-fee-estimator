@@ -4,6 +4,7 @@
         "port": 3000
     },
     "settings": {
+        "loglevel": "debug",
         "timeout": 5000,
         "feeMultiplier": 1,
         "feeMinimum": 2

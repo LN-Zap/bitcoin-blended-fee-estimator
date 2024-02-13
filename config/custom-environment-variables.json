@@ -4,6 +4,7 @@
         "port": "PORT"
     },
     "settings": {
+        "loglevel": "LOGLEVEL",
         "timeout": "TIMEOUT",
         "feeMultiplier": "FEE_MULTIPLIER",
         "feeMinimum" : "FEE_MINIMUM"
