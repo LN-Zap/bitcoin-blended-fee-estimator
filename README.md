@@ -66,30 +66,41 @@ This project uses the [`config`](https://www.npmjs.com/package/config) package f
 
 Here are the available configuration options:
 
+### Application settings
+
 | Config Key | Description | Default Value | Environment Variable |
 | --- | --- | --- | --- |
 | `server.port` | The port on which the server runs | `3000` | `PORT` |
 | `server.baseUrl` | The base url port on which the server is accessible | `http://localhost:3000` | `BASE_URL` |
-| `esplora.baseUrl` | The base URL of the Esplora API instance to connect to | `https://blockstream.info` | `ESPLORA_BASE_URL` |
-| `esplora.fallbacekBaseUrl` | The base URL of the Esplora API instance to fallback to if the primary instance is unavailable | - | `ESPLORA_FALLBACK_BASE_URL` |
-| `mempool.baseUrl` | The base URL of the Mempool instance to connect to | `https://mempool.space` | `MEMPOOL_BASE_URL` |
-| `mempool.fallbacekBaseUrl` | The base URL of the Mempool instance to fallback to if the primary instance is unavailable | - | `MEMPOOL_FALLBACK_BASE_URL` |
-| `mempool.depth` | The number of blocks to use for mempool-based fee estimates | `6` | `MEMPOOL_DEPTH` |
-| `bitcoind.baseUrl` | The base URL of the bitcoind instance to connect to | `http://localhost:8332` | `BITCOIND_BASE_URL` |
-| `bitcoind.username` | The username to use for authenticating with the bitcoind instance | - | `BITCOIND_USERNAME` |
-| `bitcoind.password` | The password to use for authenticating with the bitcoind instance | - | `BITCOIND_PASSWORD` |
-| `bitcoind.confTargets` | The block targets to use for history-based fee estimates | `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 144, 504, 1008]` | `BITCOIND_CONF_TARGETS` |
 | `settings.timeout` | Timeout to use when fetching data (ms) | `5000` | `TIMEOUT` |
 | `settings.feeMultiplier` | The multiplier to apply to the fee estimates | `1` | `FEE_MULTIPLIER` |
 | `settings.feeMinimum` | The minimum fee (sat/vB) to use for fee estimates if we could not determine from a configured data source | `2` | `FEE_MINIMUM` |
 | `cache.stdTTL` | The standard time to live in seconds for every generated cache element | `15` | `CACHE_STDTTL` |
 | `cache.checkperiod` | The period in seconds, used for the automatic delete check interval | `20` | `CACHE_CHECKPERIOD` |
 
-For example, to run the server on port 4000 and connect to a local Mempool instance, you can start the server like this:
+### Mempool settings
 
-```bash
-PORT=4000 MEMPOOL_BASE_URL=localhost bun start
-```
+| Config Key | Description | Default Value | Environment Variable |
+| --- | --- | --- | --- |
+| `mempool.baseUrl` | The base URL of the Mempool instance to connect to | `https://mempool.space` | `MEMPOOL_BASE_URL` |
+| `mempool.fallbacekBaseUrl` | The base URL of the Mempool instance to fallback to if the primary instance is unavailable | - | `MEMPOOL_FALLBACK_BASE_URL` |
+| `mempool.depth` | The number of blocks to use for mempool-based fee estimates | `6` | `MEMPOOL_DEPTH` |
+
+### Esplora settings
+
+| Config Key | Description | Default Value | Environment Variable |
+| --- | --- | --- | --- |
+| `esplora.baseUrl` | The base URL of the Esplora API instance to connect to | `https://blockstream.info` | `ESPLORA_BASE_URL` |
+| `esplora.fallbacekBaseUrl` | The base URL of the Esplora API instance to fallback to if the primary instance is unavailable | - | `ESPLORA_FALLBACK_BASE_URL` |
+
+### Bitcoind settings
+
+| Config Key | Description | Default Value | Environment Variable |
+| --- | --- | --- | --- |
+| `bitcoind.baseUrl` | The base URL of the bitcoind instance to connect to | `http://localhost:8332` | `BITCOIND_BASE_URL` |
+| `bitcoind.username` | The username to use for authenticating with the bitcoind instance | - | `BITCOIND_USERNAME` |
+| `bitcoind.password` | The password to use for authenticating with the bitcoind instance | - | `BITCOIND_PASSWORD` |
+| `bitcoind.confTargets` | The block targets to use for history-based fee estimates | `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 144, 504, 1008]` | `BITCOIND_CONF_TARGETS` |
 
 ## Development
 
