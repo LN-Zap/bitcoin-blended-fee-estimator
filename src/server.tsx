@@ -6,50 +6,80 @@ import { cors } from 'hono/cors'
 import { serveStatic } from 'hono/bun'
 import config from 'config'
 import NodeCache from 'node-cache';
+import RpcClient from 'bitcoind-rpc'
 
 // Get application configuration values from the config package.
-const port = config.get<number>('server.port');
-const baseUrl = config.get<number>('server.baseUrl');
-const esploraBaseUrl = config.get<string>('esplora.baseUrl');
-const esploraFallbackBaseUrl = config.get<string>('esplora.fallbackBaseUrl');
-const mempoolBaseUrl = config.get<string>('mempool.baseUrl');
-const mempoolFallbackBaseUrl = config.get<string>('mempool.fallbackBaseUrl');
-const mempoolDepth = config.get<number>('mempool.depth');
-const feeMultiplier = config.get<number>('settings.feeMultiplier');
-const stdTTL = config.get<number>('cache.stdTTL');
-const checkperiod = config.get<number>('cache.checkperiod');
+const PORT = config.get<number>('server.port');
+const BASE_URL = config.get<number>('server.baseUrl');
 
-// Set the timeout for fetch requests.
-const TIMEOUT: number = 2500;
+const ESPLORA_BASE_URL = config.get<string>('esplora.baseUrl');
+const ESPLORA_FALLBACK_BASE_URL = config.get<string>('esplora.fallbackBaseUrl');
+
+const MEMPOOL_BASE_URL = config.get<string>('mempool.baseUrl');
+const MEMPOOL_FALLBACK_BASE_URL = config.get<string>('mempool.fallbackBaseUrl');
+const MEMPOOL_DEPTH = config.get<number>('mempool.depth');
+
+const BITCOIND_BASE_URL = config.get<string>('bitcoind.baseUrl');
+const BITCOIND_USERNAME = config.get<string>('bitcoind.username');
+const BITCOIND_PASSWORD = config.get<number>('bitcoind.password');
+const BITCOIND_CONF_TARGETS = config.get<number[]>('bitcoind.confTargets');
+
+const TIMEOUT = config.get<number>('settings.timeout');
+const FEE_MULTIPLIER = config.get<number>('settings.feeMultiplier');
+const FEE_MINIMUM = config.get<number>('settings.feeMinimum');
+const CACHE_STDTTL = config.get<number>('cache.stdTTL');
+const CACHE_CHECKPERIOD = config.get<number>('cache.checkperiod');
+
 
 // Log the configuration values.
-console.info('---');
-console.info(`Using port: ${port}`);
-console.info(`Using base URL: ${baseUrl}`);
-console.info(`Using Esplora base URL: ${esploraBaseUrl}`);
-console.info(`Using Esplora fallback base URL: ${esploraFallbackBaseUrl}`);
-console.info(`Using Mempool base URL: ${mempoolBaseUrl}`);
-console.info(`Using Mempool fallback base URL: ${mempoolFallbackBaseUrl}`);
-console.info(`Using Mempool estimation depth: ${mempoolDepth}`);
-console.info(`Using fee multiplier: ${feeMultiplier}`);
-console.info(`Using cache stdTTL: ${stdTTL}`);
-console.info(`Using cache checkperiod: ${checkperiod}`);
-console.info('---');
+console.info(JSON.stringify({
+  mempoolSettings: {
+    baseUrl: MEMPOOL_BASE_URL,
+    fallbackBaseUrl: MEMPOOL_FALLBACK_BASE_URL,
+    estimationDepth: MEMPOOL_DEPTH
+  },
+  esploraSettings: {
+    baseUrl: ESPLORA_BASE_URL,
+    fallbackBaseUrl: ESPLORA_FALLBACK_BASE_URL
+  },
+  bitcoindSettings: {
+    baseUrl: BITCOIND_BASE_URL,
+    username: BITCOIND_USERNAME,
+    password: '******'
+  },
+  appSettings: {
+    serverPort: PORT,
+    baseUrl: BASE_URL,
+    feeMinimum: FEE_MINIMUM,
+    feeMultiplier: FEE_MULTIPLIER,
+    timeout: TIMEOUT,
+    cacheStdTTL: CACHE_STDTTL,
+    cacheCheckPeriod: CACHE_CHECKPERIOD
+  }
+}));
 
 // Constants
-const MEMPOOL_TIP_HASH_URL = mempoolBaseUrl && `${mempoolBaseUrl}/api/blocks/tip/hash`;
-const ESPLORA_TIP_HASH_URL = esploraBaseUrl && `${esploraBaseUrl}/api/blocks/tip/hash`;
-const MEMPOOL_FEES_URL = mempoolBaseUrl && `${mempoolBaseUrl}/api/v1/fees/recommended`;
-const ESPLORA_FEE_ESTIMATES_URL = esploraBaseUrl && `${esploraBaseUrl}/api/fee-estimates`;
+const MEMPOOL_TIP_HASH_URL = MEMPOOL_BASE_URL && `${MEMPOOL_BASE_URL}/api/blocks/tip/hash`;
+const ESPLORA_TIP_HASH_URL = ESPLORA_BASE_URL && `${ESPLORA_BASE_URL}/api/blocks/tip/hash`;
+const MEMPOOL_FEES_URL = MEMPOOL_BASE_URL && `${MEMPOOL_BASE_URL}/api/v1/fees/recommended`;
+const ESPLORA_FEE_ESTIMATES_URL = ESPLORA_BASE_URL && `${ESPLORA_BASE_URL}/api/fee-estimates`;
 
-const MEMPOOL_TIP_HASH_URL_FALLBACK = mempoolFallbackBaseUrl && `${mempoolFallbackBaseUrl}/api/blocks/tip/hash`;
-const ESPLORA_TIP_HASH_URL_FALLBACK = esploraFallbackBaseUrl && `${esploraFallbackBaseUrl}/api/blocks/tip/hash`;
-const MEMPOOL_FEES_URL_FALLBACK = mempoolFallbackBaseUrl && `${mempoolFallbackBaseUrl}/api/v1/fees/recommended`;
-const ESPLORA_FEE_ESTIMATES_URL_FALLBACK = esploraFallbackBaseUrl && `${esploraFallbackBaseUrl}/api/fee-estimates`;
+const MEMPOOL_TIP_HASH_URL_FALLBACK = MEMPOOL_FALLBACK_BASE_URL && `${MEMPOOL_FALLBACK_BASE_URL}/api/blocks/tip/hash`;
+const ESPLORA_TIP_HASH_URL_FALLBACK = ESPLORA_FALLBACK_BASE_URL && `${ESPLORA_FALLBACK_BASE_URL}/api/blocks/tip/hash`;
+const MEMPOOL_FEES_URL_FALLBACK = MEMPOOL_FALLBACK_BASE_URL && `${MEMPOOL_FALLBACK_BASE_URL}/api/v1/fees/recommended`;
+const ESPLORA_FEE_ESTIMATES_URL_FALLBACK = ESPLORA_FALLBACK_BASE_URL && `${ESPLORA_FALLBACK_BASE_URL}/api/fee-estimates`;
 
 // Initialize the cache.
-const cache = new NodeCache({ stdTTL: stdTTL, checkperiod: checkperiod });
 const CACHE_KEY = 'estimates';
+const cache = new NodeCache({ stdTTL: CACHE_STDTTL, checkperiod: CACHE_CHECKPERIOD });
+
+
+/**
+ * Helper function to extract value from a fulfilled promise.
+ */
+function getValueFromFulfilledPromise(result: PromiseSettledResult<any>) {
+  return result && result.status === "fulfilled" && result.value ? result.value : null;
+}
 
 // NOTE: fetch signal abortcontroller does not work on Bun.
 // See https://github.com/oven-sh/bun/issues/2489
@@ -63,9 +93,8 @@ async function fetchWithTimeout(url: string, timeout: number = TIMEOUT): Promise
   return Promise.race([fetchPromise, timeoutPromise]) as Promise<Response>;
 }
 
-
 /**
- * Fetches data from the given URL and returns the response as a string or object.
+ * Fetches data from the given URL and validates and processes the response.
  */
 async function fetchAndProcess(url: string, expectedResponseType: ExpectedResponseType): Promise<string | object | null> {
   const response = await fetchWithTimeout(url, TIMEOUT);
@@ -90,7 +119,7 @@ async function fetchAndProcess(url: string, expectedResponseType: ExpectedRespon
 }
 
 /**
- * Fetches data from the given URL and returns the response as a string or object.
+ * Fetches data from the given URL with a timeout, fallback, and error handling.
  */
 async function fetchAndHandle(url: string, expectedResponseType: ExpectedResponseType, fallbackUrl?: string): Promise<string | object | null> {
   try {
@@ -113,29 +142,6 @@ async function fetchAndHandle(url: string, expectedResponseType: ExpectedRespons
   }
 }
 
-
-// Initialize the Express app.
-const app = new Hono();
-console.info(`Fee Estimates available at ${baseUrl}/v1/fee-estimates`);
-
-// Add a health/ready endpoint.
-app.get('/health/ready', async (c) => {
-  return c.text('OK');
-});
-
-// Add a health/live endpoint.
-app.get('/health/live', async (c) => {
-  return c.text('OK');
-});
-
-// Add middleware.
-app.use('*', logger())
-app.use('*', etag())
-app.use('*', cors({
-  origin: '*',
-}))
-app.use('/static/*', serveStatic({ root: './' }))
-
 /**
  * Fetches mempool fees.
  */
@@ -147,8 +153,8 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
   const res = await Promise.allSettled(tasks);
   console.debug('Fetched mempool fees', res);
 
-  let res0 = res[0] && getValueFromFulfilledPromise(res[0]);
-  let res1 = res[1] && getValueFromFulfilledPromise(res[1]);
+  let res0 = getValueFromFulfilledPromise(res[0]);
+  let res1 = getValueFromFulfilledPromise(res[1]);
 
   // If all of the response properties are 1, then the response is an error (probably the mempool data is not available).
   const isRes0Invalid = !res0 || (Object.values(res0).every((value) => value === 1));
@@ -164,7 +170,7 @@ async function fetchMempoolFees() : Promise<MempoolFeeEstimates | null> {
 /**
  * Fetches esplora fees.
  */
-async function fetchEsploraFees() : Promise<EsploraFeeEstimates | null> {
+async function fetchEsploraFees() : Promise<FeeByBlockTarget | null> {
   const tasks = [
     ESPLORA_FEE_ESTIMATES_URL && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL, 'json'),
     ESPLORA_FEE_ESTIMATES_URL_FALLBACK && fetchAndHandle(ESPLORA_FEE_ESTIMATES_URL_FALLBACK, 'json'),
@@ -172,10 +178,84 @@ async function fetchEsploraFees() : Promise<EsploraFeeEstimates | null> {
   const res = await Promise.allSettled(tasks);
   console.debug('Fetched esplora fees', res);
 
-  let res0 = res[0] && getValueFromFulfilledPromise(res[0]);
-  let res1 = res[1] && getValueFromFulfilledPromise(res[1]);
+  let res0 = getValueFromFulfilledPromise(res[0]);
+  let res1 = getValueFromFulfilledPromise(res[1]);
 
-  return res0 || res1;
+  return res0 || res1 || null;
+}
+
+/**
+ * Fetches bitcoind fees.
+ */
+async function fetchBitcoindFees() : Promise<FeeByBlockTarget | null> {
+  if (!BITCOIND_BASE_URL) {
+    return null;
+  }
+
+  return new Promise((resolve, _) => {
+    var result : FeeByBlockTarget = {};
+
+    // Define the targets for which to fetch fee estimates.
+    const targets = BITCOIND_CONF_TARGETS;
+
+    // Extract protocol, host, port from bitcoindBaseUrl.
+    var { protocol, hostname: host, port } = new URL(BITCOIND_BASE_URL); 
+
+    // Strip the trailing colon from the protocol.
+    protocol = protocol.replace(/.$/, '')
+
+    var config = {
+      protocol,
+      host,
+      port,
+      user: BITCOIND_USERNAME,
+      pass: BITCOIND_PASSWORD,
+    };
+
+    var rpc = new RpcClient(config);
+
+    function batchCall() {
+      targets.forEach(function (target) {
+        rpc.estimatesmartfee(target);
+      });
+    }
+
+    rpc.batch(batchCall, (err: Error | null, response: BitcoindRpcBatchResponse[]) => {
+      if (err) {
+        console.error('Unable to fetch fee estimates from bitcoind', err);
+        resolve(null);
+      } else {
+        targets.forEach((target, i) => {  
+          var feeRate = response[i].result?.feerate;
+          if (feeRate) {
+            console.debug(`Raw bitcoind estimate for target ${target}: ${feeRate} BTC`);
+
+            // convert the returned value to satoshis, as it's currently returned in BTC.
+            const satPerKB = feeRate * 100000000;
+
+            console.debug(`Converted bitcoind estimate for target ${target}: ${satPerKB} sat/vb`);
+            result[target] = applyFeeMultiplier(satPerKB);
+          } else {
+            console.error(`Failed to fetch fee estimate from bitcoind for confirmation target ${target}`, response[i].result?.errors);
+          }
+        });
+
+        resolve(result);
+      }
+    });
+  });
+}
+
+function processEstimates(estimates: FeeByBlockTarget, applyMultiplier = true, convert = false) : FeeByBlockTarget {
+  for (const [blockTarget, fee] of Object.entries(estimates) as [string, number][]) {
+    if (applyMultiplier) {
+      estimates[blockTarget] = applyFeeMultiplier(fee);
+    }
+    if (convert) {
+      estimates[blockTarget] = Math.ceil(fee * 1000);
+    }
+  }
+  return estimates;
 }
 
 /**
@@ -188,10 +268,10 @@ async function fetchBlocksTipHash() : Promise<string | null> {
   ].filter(Boolean);
   const res = await Promise.allSettled(tasks);
 
-  let res0 = res[0] && getValueFromFulfilledPromise(res[0]);
-  let res1 = res[1] && getValueFromFulfilledPromise(res[1]);
+  let res0 = getValueFromFulfilledPromise(res[0]);
+  let res1 = getValueFromFulfilledPromise(res[1]);
 
-  return res0 || res1;
+  return res0 || res1 || null;
 }
 
 /**
@@ -200,40 +280,38 @@ async function fetchBlocksTipHash() : Promise<string | null> {
 async function getEstimates() : Promise<Estimates> {
   let estimates: Estimates | undefined = cache.get(CACHE_KEY);
 
-  if (!estimates) {
-
-    const tasks = [
-      await fetchMempoolFees(),
-      await fetchEsploraFees(),
-      await fetchBlocksTipHash(),
-    ];
-    const [result1, result2, result3] = await Promise.allSettled(tasks);
-    const mempoolFeeEstimates = getValueFromFulfilledPromise(result1);
-    const esploraFeeEstimates = getValueFromFulfilledPromise(result2);
-    const blocksTipHash = getValueFromFulfilledPromise(result3);
-
-    const feeByBlockTarget = calculateFees(mempoolFeeEstimates, esploraFeeEstimates);
-
-    estimates = {
-      current_block_hash: blocksTipHash,
-      fee_by_block_target: feeByBlockTarget
-    };
-
-    cache.set(CACHE_KEY, estimates);
+  if (estimates) {
+    console.info('Got estimates (from cache)', estimates);
+    return estimates;
   }
 
-  console.debug('Got estimates', estimates);
+  const tasks = [
+    await fetchMempoolFees(),
+    await fetchEsploraFees(),
+    await fetchBitcoindFees(),
+    await fetchBlocksTipHash(),
+  ];
+  const [result1, result2, result3, result4] = await Promise.allSettled(tasks);
+  const mempoolFeeEstimates = getValueFromFulfilledPromise(result1);
+  const esploraFeeEstimates = getValueFromFulfilledPromise(result2);
+  const bitcoindFeeEstimates = getValueFromFulfilledPromise(result3);
+  const blocksTipHash = getValueFromFulfilledPromise(result4);
+
+  estimates = {
+    current_block_hash: blocksTipHash,
+    fee_by_block_target: calculateFees(mempoolFeeEstimates, esploraFeeEstimates, bitcoindFeeEstimates),
+  };
+
+  cache.set(CACHE_KEY, estimates);
+
+  console.info('Got estimates', estimates);
   return estimates;
 }
 
 /**
- * Helper function to extract value from a fulfilled promise.
+ * Get the fee estimates that are above the desired mempool depth.
  */
-function getValueFromFulfilledPromise(result: PromiseSettledResult<any>) {
-  return result.status === "fulfilled" && result.value ? result.value : null;
-}
-
-function calculateMempoolFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined): FeeByBlockTarget {
+function extractMempoolFees(mempoolFeeEstimates: MempoolFeeEstimates): FeeByBlockTarget {
   const feeByBlockTarget: FeeByBlockTarget = {};
 
   if (mempoolFeeEstimates) {
@@ -242,71 +320,90 @@ function calculateMempoolFees(mempoolFeeEstimates: MempoolFeeEstimates | null | 
       3: 'halfHourFee',
       6: 'hourFee'
     };
-    for (let i = 1; i <= mempoolDepth; i++) {
+    for (let i = 1; i <= MEMPOOL_DEPTH; i++) {
       const feeProperty = blockTargetMapping[i];
-      if (feeProperty && mempoolFeeEstimates[feeProperty] !== undefined) {
-        const adjustedFee = Math.round(mempoolFeeEstimates[feeProperty]! * 1000 * feeMultiplier);
-        feeByBlockTarget[i] = adjustedFee;
+      if (feeProperty && mempoolFeeEstimates[feeProperty]) {
+        feeByBlockTarget[i] = mempoolFeeEstimates[feeProperty];
       }
     }
   }
+
   return feeByBlockTarget;
 }
 
-function calculateMinMempoolFee(feeByBlockTarget: FeeByBlockTarget) {
+/**
+ * Gets the lowest fee from the feeByBlockTarget object.
+ */
+function getLowestFee(feeByBlockTarget: FeeByBlockTarget) : number | null {
   const values = Object.values(feeByBlockTarget);
-  return values.length > 0 ? Math.min(...values) : undefined;
+  return values.length > 0 ? Math.min(...values) : null;
 }
 
-function calculateEsploraFees(esploraFeeEstimates: EsploraFeeEstimates | null | undefined): FeeByBlockTarget {
-  const feeByBlockTarget: FeeByBlockTarget = {};
-  if (esploraFeeEstimates) {
-    for (const [blockTarget, fee] of Object.entries(esploraFeeEstimates)) {
-      const adjustedFee = Math.round(fee * 1000 * feeMultiplier);
-      feeByBlockTarget[blockTarget] = adjustedFee;
+/**
+ * Applies the fee multiplier to the given estimate.
+ */
+function applyFeeMultiplier(fee: number) : number {
+  return fee * FEE_MULTIPLIER;
+}
+
+/**
+ * Filters the estimates to remove any that are lower than the desired minimum fee.
+ */
+function filterEstimates(feeByBlockTarget: FeeByBlockTarget, minFee: number): FeeByBlockTarget {
+  const result: FeeByBlockTarget = {};
+  for (const [blockTarget, fee] of Object.entries(feeByBlockTarget)) {
+    if (fee >= minFee) {
+      result[blockTarget] = fee;
     }
   }
-  return feeByBlockTarget;
+  return result;
 }
 
-function filterEstimates(feeByBlockTarget: FeeByBlockTarget, minFee: number | undefined): FeeByBlockTarget {
-  const filteredEstimates: FeeByBlockTarget = {};
-  let lastAddedFee: number | null = null;
-
-  for (const key of Object.keys(feeByBlockTarget)) {
-    const fee = feeByBlockTarget[key];
-    if (lastAddedFee && fee >= lastAddedFee) continue;
-    if (minFee && fee < minFee) continue;
-
-    filteredEstimates[key] = fee;
-
-    lastAddedFee = fee;
-  }
-
-  return filteredEstimates;
-}
-
-function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates | null | undefined, esploraFeeEstimates: EsploraFeeEstimates | null | undefined) {
-  let feeByBlockTarget: FeeByBlockTarget = {};
-
-  // Get the minimum fee. If the mempool fee estimates are not available, use a default value of 5 sat/vbyte as a safety net.
-  const minFee = (mempoolFeeEstimates?.minimumFee ?? 5) * 1000;
-
-  // Get the mempool fee estimates.
-  feeByBlockTarget = calculateMempoolFees(mempoolFeeEstimates);
-  const minMempoolFee = calculateMinMempoolFee(feeByBlockTarget);
-
-  // Add the esplora fee estimates.
-  const esploraFeeEstimatesAdjusted =  calculateEsploraFees(esploraFeeEstimates);
-
-  for (const [blockTarget, fee] of Object.entries(esploraFeeEstimatesAdjusted)) {
-    if (!minMempoolFee || fee < minMempoolFee) {
+/**
+ * Appends estimates to the feeByBlockTarget object.
+ */
+function addFeeEstimates(feeByBlockTarget: FeeByBlockTarget, feeEstimates: FeeByBlockTarget) {
+  const lowestFee = getLowestFee(feeByBlockTarget)
+  for (const [blockTarget, fee] of Object.entries(feeEstimates)) {
+    if (!lowestFee || fee < lowestFee) {
       feeByBlockTarget[blockTarget] = fee;
     }
   }
+}
 
-  // Filter the estimates.
-  feeByBlockTarget = filterEstimates(feeByBlockTarget, minFee);
+/**
+ * Calculates the fees.
+ */
+function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates, esploraFeeEstimates: FeeByBlockTarget, bitcoindFeeEstimates: FeeByBlockTarget) {
+  let feeByBlockTarget: FeeByBlockTarget = {};
+
+  // Get the mempool fee estimates.
+  if (mempoolFeeEstimates) {
+    let estimates = extractMempoolFees(mempoolFeeEstimates);
+    estimates = processEstimates(estimates, true, true);
+    addFeeEstimates(feeByBlockTarget, estimates);
+  }
+
+  // Add the bitcoind fee estimates.
+  if (bitcoindFeeEstimates) {
+    const estimates = processEstimates(bitcoindFeeEstimates, true, false);
+    addFeeEstimates(feeByBlockTarget, estimates);
+  }
+
+   // Add the esplora fee estimates.
+  if (esploraFeeEstimates) {
+    const estimates = processEstimates(esploraFeeEstimates, true, true);
+    addFeeEstimates(feeByBlockTarget, estimates);
+  }
+
+  // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
+  const minFee = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
+  console.debug('Using minimum fee:', minFee);
+
+  // Return fees filterd to remove any that are lower than the determined minimum fee.
+  if (minFee) {
+    return filterEstimates(feeByBlockTarget, minFee);
+  }
 
   return feeByBlockTarget;
 }
@@ -348,7 +445,7 @@ const Content = (props: { siteData: SiteData; estimates: Estimates }) => (
 
     <div class="content">
       <pre>
-        <span class="blue">curl</span> -L -X GET <span class="green">'{baseUrl}/v1/fee-estimates'</span>
+        <span class="blue">curl</span> -L -X GET <span class="green">'{BASE_URL}/v1/fee-estimates'</span>
       </pre>
 
       <pre>
@@ -363,17 +460,43 @@ const Content = (props: { siteData: SiteData; estimates: Estimates }) => (
   </Layout>
 );
 
+// Define the app.
+
+// Initialize the Express app.
+const app = new Hono();
+console.info(`Fee Estimates available at ${BASE_URL}/v1/fee-estimates`);
+
+// Add a health/ready endpoint.
+app.get('/health/ready', async (c) => {
+  return c.text('OK');
+});
+
+// Add a health/live endpoint.
+app.get('/health/live', async (c) => {
+  return c.text('OK');
+});
+
+// Add middleware.
+app.use('*', logger())
+app.use('*', etag())
+app.use('*', cors({
+  origin: '*',
+}))
+app.use('/static/*', serveStatic({ root: './' }))
+
+// Define the routes.
+
 /**
  * Returns the current fee estimates for the Bitcoin network, rendered as HTML.
  */
 app.get('/', async (c) => {
-  let estimates : Estimates | undefined;
+  let estimates : Estimates;
 
   try {
     estimates = await getEstimates();
 
     // Set cache headers.
-    c.res.headers.set('Cache-Control', `public, max-age=${stdTTL}`)
+    c.res.headers.set('Cache-Control', `public, max-age=${CACHE_STDTTL}`)
 
   } catch (error) {
     console.error(error);
@@ -402,7 +525,7 @@ app.get('/v1/fee-estimates', async (c) => {
     let estimates = await getEstimates();
 
     // Set cache headers.
-    c.res.headers.set('Cache-Control', `public, max-age=${stdTTL}`)
+    c.res.headers.set('Cache-Control', `public, max-age=${CACHE_STDTTL}`)
 
     // Return the estimates.
     return c.json(estimates);
@@ -414,7 +537,7 @@ app.get('/v1/fee-estimates', async (c) => {
 });
 
 export default {
-  port,
+  port: PORT,
   fetch: app.fetch,
 }
 

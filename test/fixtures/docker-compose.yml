@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+
+  bitcoind:
+    image: us-east1-docker.pkg.dev/zap-strike-infrastructure/zap-container-registry/bitcoind:25.1.0
+    restart: unless-stopped
+    ports:
+      - "18445:18445"
+      - "18444:18444"
+    volumes:
+      - "bitcoind:/bitcoin/.bitcoin"
+      - "./bitcoin.conf:/bitcoin/.bitcoin/bitcoin.conf"
+      - "./init.sh:/init.sh"
+
+volumes:
+    bitcoind:
