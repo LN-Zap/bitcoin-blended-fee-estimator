@@ -313,38 +313,47 @@ export function extractMempoolFees(mempoolFeeEstimates: MempoolFeeEstimates): Fe
 }
 
 /**
- * Gets the lowest fee from the feeByBlockTarget object.
- */
-function getLowestFee(feeByBlockTarget: FeeByBlockTarget) : number | null {
-    const values = Object.values(feeByBlockTarget);
-    return values.length > 0 ? Math.min(...values) : null;
-}
-
-/**
  * Filters the estimates to remove duplicates and estimates that are lower than the desired minimum fee.
  */
 export function filterEstimates(feeByBlockTarget: FeeByBlockTarget, minFee: number): FeeByBlockTarget {
-    const result: FeeByBlockTarget = {};
+  const result: FeeByBlockTarget = {};
 
-    for (const [blockTarget, fee] of Object.entries(feeByBlockTarget)) {
-        if (fee >= minFee) {
-            result[Number(blockTarget)] = fee;
-        }
+  for (const [blockTarget, fee] of Object.entries(feeByBlockTarget)) {
+    if (fee >= minFee) {
+      result[Number(blockTarget)] = fee;
     }
+  }
 
-    // If we didn't manage to get any fee estimates, return a single estimate with the minimum fee.
-    if (Object.keys(result).length === 0) {
-        result[1] = minFee;
-    }
+  // If we didn't manage to get any fee estimates, return a single estimate with the minimum fee.
+  if (Object.keys(result).length === 0) {
+    result[1] = minFee;
+  }
 
-    return result;
+  return result;
 }
 
-function addFeeEstimates(feeByBlockTarget: FeeByBlockTarget, feeEstimates: FeeByBlockTarget) {
-    const lowestFee = getLowestFee(feeByBlockTarget)
-    for (const [blockTarget, fee] of Object.entries(feeEstimates)) {
-        if (!lowestFee || fee < lowestFee) {
-            feeByBlockTarget[Number(blockTarget)] = Math.ceil(fee);
+export function addFeeEstimates(feeByBlockTarget: { [key: number]: number }, newEstimates: { [key: number]: number }) {
+    let highestBlockTarget = Math.max(...Object.keys(feeByBlockTarget).map(Number));
+    let lowestFee = Math.min(...Object.values(feeByBlockTarget));
+
+    log.trace({ message: `Initial highest block target: ${highestBlockTarget}, Lowest fee: ${lowestFee}` });
+
+    // Iterate over the new estimates
+    for (const [blockTarget, fee] of Object.entries(newEstimates)) {
+        const numericBlockTarget = Number(blockTarget);
+
+        log.trace({ message: `New estimate - Block target: ${numericBlockTarget}, Fee: ${fee}` });
+
+        // Only add the new estimate if the block target is higher and the fee is lower than the current ones
+        if (numericBlockTarget > highestBlockTarget && fee < lowestFee) {
+            log.trace({ message: `Adding new estimate - Block target: ${numericBlockTarget}, Fee: ${fee}` });
+            feeByBlockTarget[numericBlockTarget] = fee;
+
+            // Update the highest block target and lowest fee
+            highestBlockTarget = numericBlockTarget;
+            lowestFee = fee;
+
+            log.trace({ message: `Updated highest block target: ${highestBlockTarget}, Lowest fee: ${lowestFee}` });
         }
     }
 }
