@@ -1,32 +1,32 @@
 {
-    "server": {
-        "baseUrl": "BASE_URL",
-        "port": "PORT"
-    },
-    "settings": {
-        "loglevel": "LOGLEVEL",
-        "timeout": "TIMEOUT",
-        "feeMultiplier": "FEE_MULTIPLIER",
-        "feeMinimum" : "FEE_MINIMUM"
-    },
-    "mempool": {
-        "baseUrl": "MEMPOOL_BASE_URL",
-        "fallbackBaseUrl": "MEMPOOL_FALLBACK_BASE_URL",
-        "depth": "MEMPOOL_DEPTH"
-    },
-    "esplora": {
-        "baseUrl": "ESPLORA_BASE_URL",
-        "fallbackBaseUrl": "ESPLORA_FALLBACK_BASE_URL"
-    },
-    "bitcoind": {
-        "baseUrl": "BITCOIND_BASE_URL",
-        "username": "BITCOIND_USERNAME",
-        "password": "BITCOIND_PASSWORD",
-        "confTargets": "BITCOIND_CONF_TARGETS",
-        "estimateMode": "BITCOIND_ESTIMATE_MODE"
-    },
-    "cache": {
-        "stdTTL": "CACHE_STD_TTL",
-        "checkperiod": "CACHE_CHECKPERIOD"
-    }
+  "server": {
+    "baseUrl": "BASE_URL",
+    "port": "PORT"
+  },
+  "settings": {
+    "loglevel": "LOGLEVEL",
+    "timeout": "TIMEOUT",
+    "feeMultiplier": "FEE_MULTIPLIER",
+    "feeMinimum": "FEE_MINIMUM"
+  },
+  "mempool": {
+    "baseUrl": "MEMPOOL_BASE_URL",
+    "fallbackBaseUrl": "MEMPOOL_FALLBACK_BASE_URL",
+    "depth": "MEMPOOL_DEPTH"
+  },
+  "esplora": {
+    "baseUrl": "ESPLORA_BASE_URL",
+    "fallbackBaseUrl": "ESPLORA_FALLBACK_BASE_URL"
+  },
+  "bitcoind": {
+    "baseUrl": "BITCOIND_BASE_URL",
+    "username": "BITCOIND_USERNAME",
+    "password": "BITCOIND_PASSWORD",
+    "confTargets": "BITCOIND_CONF_TARGETS",
+    "estimateMode": "BITCOIND_ESTIMATE_MODE"
+  },
+  "cache": {
+    "stdTTL": "CACHE_STD_TTL",
+    "checkperiod": "CACHE_CHECKPERIOD"
+  }
 }

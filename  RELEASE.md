@@ -1,6 +1,6 @@
 # Releasing
 
-Releasing a new version of this project involves cutting a new release on GitHub. 
+Releasing a new version of this project involves cutting a new release on GitHub.
 
 When a new release is created on GitHub, it triggers a Docker build and push to Docker Hub. This is done through GitHub Actions, which is configured to automatically build a new Docker image and push it to Docker Hub whenever a new release is created.
 
