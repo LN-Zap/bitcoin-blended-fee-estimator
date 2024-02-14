@@ -10,7 +10,7 @@ type MempoolFeeEstimates = {
 
 // FeeByBlockTarget represents the fee by block target.
 type FeeByBlockTarget = {
-  [key: string]: number; // fees by confirmation target
+  [key: number]: number; // fees by confirmation target
 };
 
 // Estimates represents the current block hash and fee by block target.
