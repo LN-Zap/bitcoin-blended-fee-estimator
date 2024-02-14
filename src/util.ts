@@ -360,12 +360,17 @@ export async function getEstimates(): Promise<Estimates> {
   const bitcoindFeeEstimates = getValueFromFulfilledPromise(result3);
   const blocksTipHash = getValueFromFulfilledPromise(result4);
 
+  // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
+  const feeMinimum = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
+  log.info({ message: "Using minimum fee: {feeMinimum}", feeMinimum });
+
   estimates = {
     current_block_hash: blocksTipHash,
     fee_by_block_target: calculateFees(
       mempoolFeeEstimates,
       esploraFeeEstimates,
       bitcoindFeeEstimates,
+      feeMinimum,
     ),
   };
 
@@ -380,6 +385,7 @@ export async function getEstimates(): Promise<Estimates> {
  */
 export function extractMempoolFees(
   mempoolFeeEstimates: MempoolFeeEstimates,
+  depth: number,
 ): FeeByBlockTarget {
   const feeByBlockTarget: FeeByBlockTarget = {};
 
@@ -389,7 +395,7 @@ export function extractMempoolFees(
       3: "halfHourFee",
       6: "hourFee",
     };
-    for (let i = 1; i <= MEMPOOL_DEPTH; i++) {
+    for (let i = 1; i <= depth; i++) {
       const feeProperty = blockTargetMapping[i];
       if (feeProperty && mempoolFeeEstimates[feeProperty]) {
         feeByBlockTarget[i] = mempoolFeeEstimates[feeProperty];
@@ -469,12 +475,13 @@ export function calculateFees(
   mempoolFeeEstimates: MempoolFeeEstimates,
   esploraFeeEstimates: FeeByBlockTarget,
   bitcoindFeeEstimates: FeeByBlockTarget,
+  feeMinimum: number,
 ) {
   let feeByBlockTarget: FeeByBlockTarget = {};
 
   // Get the mempool fee estimates.
   if (mempoolFeeEstimates) {
-    let estimates = extractMempoolFees(mempoolFeeEstimates);
+    let estimates = extractMempoolFees(mempoolFeeEstimates, MEMPOOL_DEPTH);
     estimates = processEstimates(estimates, true, true);
     addFeeEstimates(feeByBlockTarget, estimates);
   }
@@ -491,12 +498,8 @@ export function calculateFees(
     addFeeEstimates(feeByBlockTarget, estimates);
   }
 
-  // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
-  const minFee = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
-  log.info({ message: "Using minimum fee: {minFee}", minFee });
-
   // Filter the estimates to remove any that are lower than the desired minimum fee.
-  feeByBlockTarget = filterEstimates(feeByBlockTarget, minFee);
+  feeByBlockTarget = filterEstimates(feeByBlockTarget, feeMinimum);
 
   return feeByBlockTarget;
 }
