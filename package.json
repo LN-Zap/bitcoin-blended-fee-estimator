@@ -7,7 +7,8 @@
     "dev": "bun run --hot src/server.tsx",
     "start": "bun run src/server.tsx",
     "docker:build": "docker build -t bitcoin-blended-fee-estimator .",
-    "docker:run": "docker run --init -p 3000:3000 bitcoin-blended-fee-estimator"
+    "docker:run": "docker run --init -p 3000:3000 bitcoin-blended-fee-estimator",
+    "fmt": "bunx prettier --write ."
   },
   "keywords": [
     "lnd",
