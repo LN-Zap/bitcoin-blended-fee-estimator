@@ -18,16 +18,16 @@ This application exposes a single API endpoint at `/v1/fee-estimates`. This endp
 
 ```json
 {
-    "current_block_hash": "0000000000000000000044ab897830778c73d33fdeddde1f21e875fae2150378",
-    "fee_by_block_target": {
-        "1": 81900,
-        "2": 78750,
-        "3": 74550,
-        "6": 68700,
-        "144": 64951,
-        "504": 53464,
-        "1008": 28175
-    }
+  "current_block_hash": "0000000000000000000044ab897830778c73d33fdeddde1f21e875fae2150378",
+  "fee_by_block_target": {
+    "1": 81900,
+    "2": 78750,
+    "3": 74550,
+    "6": 68700,
+    "144": 64951,
+    "504": 53464,
+    "1008": 28175
+  }
 }
 ```
 
@@ -68,41 +68,41 @@ Here are the available configuration options:
 
 ### Application settings
 
-| Config Key | Description | Default Value | Environment Variable |
-| --- | --- | --- | --- |
-| `server.port` | The port on which the server runs | `3000` | `PORT` |
-| `server.baseUrl` | The base url port on which the server is accessible | `http://localhost:3000` | `BASE_URL` |
-| `settings.logLevel` | The log level to use for the application | `debug` | `LOGLEVEL` |
-| `settings.timeout` | Timeout to use when fetching data (ms) | `5000` | `TIMEOUT` |
-| `settings.feeMultiplier` | The multiplier to apply to the fee estimates | `1` | `FEE_MULTIPLIER` |
-| `settings.feeMinimum` | The minimum fee (sat/vB) to use for fee estimates if we could not determine from a configured data source | `2` | `FEE_MINIMUM` |
-| `cache.stdTTL` | The standard time to live in seconds for every generated cache element | `15` | `CACHE_STDTTL` |
-| `cache.checkperiod` | The period in seconds, used for the automatic delete check interval | `20` | `CACHE_CHECKPERIOD` |
+| Config Key               | Description                                                                                               | Default Value           | Environment Variable |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------- | -------------------- |
+| `server.port`            | The port on which the server runs                                                                         | `3000`                  | `PORT`               |
+| `server.baseUrl`         | The base url port on which the server is accessible                                                       | `http://localhost:3000` | `BASE_URL`           |
+| `settings.logLevel`      | The log level to use for the application                                                                  | `debug`                 | `LOGLEVEL`           |
+| `settings.timeout`       | Timeout to use when fetching data (ms)                                                                    | `5000`                  | `TIMEOUT`            |
+| `settings.feeMultiplier` | The multiplier to apply to the fee estimates                                                              | `1`                     | `FEE_MULTIPLIER`     |
+| `settings.feeMinimum`    | The minimum fee (sat/vB) to use for fee estimates if we could not determine from a configured data source | `2`                     | `FEE_MINIMUM`        |
+| `cache.stdTTL`           | The standard time to live in seconds for every generated cache element                                    | `15`                    | `CACHE_STDTTL`       |
+| `cache.checkperiod`      | The period in seconds, used for the automatic delete check interval                                       | `20`                    | `CACHE_CHECKPERIOD`  |
 
 ### Mempool settings
 
-| Config Key | Description | Default Value | Environment Variable |
-| --- | --- | --- | --- |
-| `mempool.baseUrl` | The base URL of the Mempool instance to connect to | `https://mempool.space` | `MEMPOOL_BASE_URL` |
-| `mempool.fallbacekBaseUrl` | The base URL of the Mempool instance to fallback to if the primary instance is unavailable | - | `MEMPOOL_FALLBACK_BASE_URL` |
-| `mempool.depth` | The number of blocks to use for mempool-based fee estimates | `6` | `MEMPOOL_DEPTH` |
+| Config Key                 | Description                                                                                | Default Value           | Environment Variable        |
+| -------------------------- | ------------------------------------------------------------------------------------------ | ----------------------- | --------------------------- |
+| `mempool.baseUrl`          | The base URL of the Mempool instance to connect to                                         | `https://mempool.space` | `MEMPOOL_BASE_URL`          |
+| `mempool.fallbacekBaseUrl` | The base URL of the Mempool instance to fallback to if the primary instance is unavailable | -                       | `MEMPOOL_FALLBACK_BASE_URL` |
+| `mempool.depth`            | The number of blocks to use for mempool-based fee estimates                                | `6`                     | `MEMPOOL_DEPTH`             |
 
 ### Esplora settings
 
-| Config Key | Description | Default Value | Environment Variable |
-| --- | --- | --- | --- |
-| `esplora.baseUrl` | The base URL of the Esplora API instance to connect to. Set to `null` to disable. | `https://blockstream.info` | `ESPLORA_BASE_URL` |
-| `esplora.fallbacekBaseUrl` | The base URL of the Esplora API instance to fallback to if the primary instance is unavailable | - | `ESPLORA_FALLBACK_BASE_URL` |
+| Config Key                 | Description                                                                                    | Default Value              | Environment Variable        |
+| -------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------- | --------------------------- |
+| `esplora.baseUrl`          | The base URL of the Esplora API instance to connect to. Set to `null` to disable.              | `https://blockstream.info` | `ESPLORA_BASE_URL`          |
+| `esplora.fallbacekBaseUrl` | The base URL of the Esplora API instance to fallback to if the primary instance is unavailable | -                          | `ESPLORA_FALLBACK_BASE_URL` |
 
 ### Bitcoind settings
 
-| Config Key | Description | Default Value | Environment Variable |
-| --- | --- | --- | --- |
-| `bitcoind.baseUrl` | The base URL of the bitcoind instance to connect to. Set to `null` to disable. | `http://localhost:8332` | `BITCOIND_BASE_URL` |
-| `bitcoind.username` | The username to use for authenticating with the bitcoind instance | - | `BITCOIND_USERNAME` |
-| `bitcoind.password` | The password to use for authenticating with the bitcoind instance | - | `BITCOIND_PASSWORD` |
-| `bitcoind.confTargets` | The block targets to use for history-based fee estimates | `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 144, 504, 1008]` | `BITCOIND_CONF_TARGETS` |
-| `bitcoind.estimateMode` | The estimate mode to use for fee estimates (`ECONOMICAL` or `CONSERVATIVE`) | `ECONOMICAL` | `BITCOIND_ESTIMATE_MODE` |
+| Config Key              | Description                                                                    | Default Value                                                                                                 | Environment Variable     |
+| ----------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `bitcoind.baseUrl`      | The base URL of the bitcoind instance to connect to. Set to `null` to disable. | `http://localhost:8332`                                                                                       | `BITCOIND_BASE_URL`      |
+| `bitcoind.username`     | The username to use for authenticating with the bitcoind instance              | -                                                                                                             | `BITCOIND_USERNAME`      |
+| `bitcoind.password`     | The password to use for authenticating with the bitcoind instance              | -                                                                                                             | `BITCOIND_PASSWORD`      |
+| `bitcoind.confTargets`  | The block targets to use for history-based fee estimates                       | `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 144, 504, 1008]` | `BITCOIND_CONF_TARGETS`  |
+| `bitcoind.estimateMode` | The estimate mode to use for fee estimates (`ECONOMICAL` or `CONSERVATIVE`)    | `ECONOMICAL`                                                                                                  | `BITCOIND_ESTIMATE_MODE` |
 
 ## Development
 
@@ -145,7 +145,9 @@ bun run docker:run
 ```
 
 ## Contributing
+
 We welcome contributions to this project. Please feel free to open an [issue](https://github.com/LN-Zap/bitcoin-blended-fee-estimator/issues) or submit a [pull request](https://github.com/LN-Zap/bitcoin-blended-fee-estimator/pulls).
 
 ## License
+
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE.md) file for more details.

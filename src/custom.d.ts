@@ -26,26 +26,26 @@ type BlockTargetMapping = {
 
 // SiteData represents the data of a site.
 interface SiteData {
-  title: string, // title of the site
-  subtitle: string, // subtitle of the site
-  children?: any // children of the site (optional)
-};
+  title: string; // title of the site
+  subtitle: string; // subtitle of the site
+  children?: any; // children of the site (optional)
+}
 
 // ExpectedResponseType represents the expected response type for an http request.
-type ExpectedResponseType = 'json' | 'text'; // can be either 'json' or 'text'
+type ExpectedResponseType = "json" | "text"; // can be either 'json' or 'text'
 
 // BatchRequest represents a bitcoind batch request response.
 interface BitcoindRpcBatchResponse {
   result?: EstimateSmartFeeResponse;
   error?: any;
-};
+}
 
 // EstimateSmartFeeResponse represents the response of the estimatesmarttee method.
 interface EstimateSmartFeeResponse {
-  feerate?: number, // estimate fee rate in BTC/kB (only present if no errors were encountered)
-  errors?: [string], // errors encountered during processing (if there are any)
-  blocks?: number // block number where estimate was found
-};
+  feerate?: number; // estimate fee rate in BTC/kB (only present if no errors were encountered)
+  errors?: [string]; // errors encountered during processing (if there are any)
+  blocks?: number; // block number where estimate was found
+}
 
 // EstimateMode represents the mode for fee estimation.
-type EstimateMode = 'ECONOMICAL' | 'CONSERVATIVE'; // estimate mode can be either 'ECONOMICAL' or 'CONSERVATIVE'
+type EstimateMode = "ECONOMICAL" | "CONSERVATIVE"; // estimate mode can be either 'ECONOMICAL' or 'CONSERVATIVE'

@@ -1,7 +1,7 @@
 {
-    "bitcoind": {
-        "baseUrl": "http://127.0.0.1:18445",
-        "username": "user",
-        "password": "pass"
-    }
+  "bitcoind": {
+    "baseUrl": "http://127.0.0.1:18445",
+    "username": "user",
+    "password": "pass"
+  }
 }
