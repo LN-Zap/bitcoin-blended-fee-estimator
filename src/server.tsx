@@ -230,18 +230,18 @@ async function fetchBitcoindData() : Promise<FeeByBlockTarget | null> {
   }
 
   return new Promise((resolve, _) => {
-    var data : FeeByBlockTarget = {};
+    let data : FeeByBlockTarget = {};
 
     // Define the targets for which to fetch fee estimates.
     const targets = BITCOIND_CONF_TARGETS;
 
     // Extract protocol, host, port from bitcoindBaseUrl.
-    var { protocol, hostname: host, port } = new URL(BITCOIND_BASE_URL); 
+    let { protocol, hostname: host, port } = new URL(BITCOIND_BASE_URL);
 
     // Strip the trailing colon from the protocol.
     protocol = protocol.replace(/.$/, '')
 
-    var config = {
+    const config = {
       protocol,
       host,
       port,
@@ -249,7 +249,7 @@ async function fetchBitcoindData() : Promise<FeeByBlockTarget | null> {
       pass: BITCOIND_PASSWORD,
     };
 
-    var rpc = new RpcClient(config);
+    const rpc = new RpcClient(config);
 
     function batchCall() {
       targets.forEach(function (target) {
@@ -263,7 +263,7 @@ async function fetchBitcoindData() : Promise<FeeByBlockTarget | null> {
         resolve(null);
       } else {
         targets.forEach((target, i) => {  
-          var feeRate = response[i].result?.feerate;
+          let feeRate = response[i].result?.feerate;
           if (feeRate) {
             // convert the returned value to satoshis, as it's currently returned in BTC.
             data[target] = feeRate * 1e8;
@@ -280,15 +280,15 @@ async function fetchBitcoindData() : Promise<FeeByBlockTarget | null> {
 }
 
 function processEstimates(estimates: FeeByBlockTarget, applyMultiplier = true, convert = false) : FeeByBlockTarget {
-  for (const [blockTarget, fee] of Object.entries(estimates) as [string, number][]) {
+  for (const [blockTarget, fee] of Object.entries(estimates) ) {
     let estimate = fee;
     if (applyMultiplier) {
-      estimate = applyFeeMultiplier(fee);
+      estimate = estimate * FEE_MULTIPLIER;
     }
     if (convert) {
-      estimate = Math.ceil(estimate * 1000);
+      estimate = estimate * 1000;
     }
-    estimates[blockTarget] = estimate;
+    estimates[Number(blockTarget)] = Math.ceil(estimate);
   }
   return estimates;
 }
@@ -375,22 +375,22 @@ function getLowestFee(feeByBlockTarget: FeeByBlockTarget) : number | null {
 }
 
 /**
- * Applies the fee multiplier to the given estimate.
- */
-function applyFeeMultiplier(fee: number) : number {
-  return fee * FEE_MULTIPLIER;
-}
-
-/**
- * Filters the estimates to remove any that are lower than the desired minimum fee.
+ * Filters the estimates to remove duplicates and estimates that are lower than the desired minimum fee.
  */
 function filterEstimates(feeByBlockTarget: FeeByBlockTarget, minFee: number): FeeByBlockTarget {
   const result: FeeByBlockTarget = {};
+
   for (const [blockTarget, fee] of Object.entries(feeByBlockTarget)) {
     if (fee >= minFee) {
-      result[blockTarget] = fee;
+      result[Number(blockTarget)] = fee;
     }
   }
+
+  // If we didn't manage to get any fee estimates, return a single estimate with the minimum fee.
+  if (Object.keys(result).length === 0) {
+    result[1] = minFee;
+  }
+
   return result;
 }
 
@@ -401,7 +401,7 @@ function addFeeEstimates(feeByBlockTarget: FeeByBlockTarget, feeEstimates: FeeBy
   const lowestFee = getLowestFee(feeByBlockTarget)
   for (const [blockTarget, fee] of Object.entries(feeEstimates)) {
     if (!lowestFee || fee < lowestFee) {
-      feeByBlockTarget[blockTarget] = Math.ceil(fee);
+      feeByBlockTarget[Number(blockTarget)] = Math.ceil(fee);
     }
   }
 }
@@ -433,17 +433,10 @@ function calculateFees(mempoolFeeEstimates: MempoolFeeEstimates, esploraFeeEstim
 
   // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
   const minFee = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
-  if (minFee) {
-    logger.info({ message: 'Using minimum fee: {minFee}', minFee });
+  logger.info({ message: 'Using minimum fee: {minFee}', minFee });
 
-    // Filter the estimates to remove any that are lower than the desired minimum fee.
-    feeByBlockTarget = filterEstimates(feeByBlockTarget, minFee);
-
-    // If we didn't manage to get any fee estimates, return a single estimate with the minimum fee.
-    if (Object.keys(feeByBlockTarget).length === 0) {
-      feeByBlockTarget = { 1: minFee }
-    }
-  }
+  // Filter the estimates to remove any that are lower than the desired minimum fee.
+  feeByBlockTarget = filterEstimates(feeByBlockTarget, minFee);
 
   return feeByBlockTarget;
 }
