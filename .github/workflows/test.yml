@@ -1,0 +1,22 @@
+name: Test
+
+on:
+  push:
+
+jobs:
+  publish:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests
+        run: bun test

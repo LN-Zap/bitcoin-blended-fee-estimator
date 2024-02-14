@@ -31,7 +31,7 @@
     "@types/config": "3.3.3",
     "@types/node-cache": "4.2.5",
     "pino-pretty": "10.3.1",
-    "tape": "5.7.4"
+    "tap": "18.7.0"
   },
   "engines": {
     "node": ">=14.0.0"
