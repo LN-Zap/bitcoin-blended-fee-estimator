@@ -397,7 +397,8 @@ export async function getEstimates(): Promise<Estimates> {
     await fetchBlocksTipHash(),
     await fetchBlocksTipHeight(),
   ];
-  const [result1, result2, result3, result4, result5] = await Promise.allSettled(tasks);
+  const [result1, result2, result3, result4, result5] =
+    await Promise.allSettled(tasks);
   const mempoolFeeEstimates = getValueFromFulfilledPromise(result1);
   const esploraFeeEstimates = getValueFromFulfilledPromise(result2);
   const bitcoindFeeEstimates = getValueFromFulfilledPromise(result3);
