@@ -1,11 +1,5 @@
 import NodeCache from "node-cache";
 
-export interface Provider {
-  getBlockHeight(): Promise<number>;
-  getBlockHash(): Promise<string>;
-  getFeeEstimates(): Promise<FeeByBlockTarget>;
-}
-
 export class DataPoint {
   constructor(
     public provider: Provider,

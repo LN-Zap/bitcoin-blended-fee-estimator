@@ -50,3 +50,12 @@ interface EstimateSmartFeeResponse {
 
 // EstimateMode represents the mode for fee estimation.
 type EstimateMode = "ECONOMICAL" | "CONSERVATIVE"; // estimate mode can be either 'ECONOMICAL' or 'CONSERVATIVE'
+
+interface Provider {
+  getBlockHeight(): Promise<number>;
+  getBlockHash(): Promise<string>;
+  getFeeEstimates(): Promise<FeeByBlockTarget>;
+  getAllData(): Promise<ProviderData>;
+}
+
+type ProviderData = [number, string, FeeByBlockTarget];
