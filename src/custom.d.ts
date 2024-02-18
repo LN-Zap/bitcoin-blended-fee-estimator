@@ -16,6 +16,7 @@ type FeeByBlockTarget = {
 // Estimates represents the current block hash and fee by block target.
 type Estimates = {
   current_block_hash: string | null; // current block hash
+  current_block_height: number | null; // current block height
   fee_by_block_target: FeeByBlockTarget; // fee by block target (in sat/kb)
 };
 
