@@ -35,22 +35,37 @@ export const FEE_MINIMUM = config.get<number>("settings.feeMinimum");
 export const CACHE_STDTTL = config.get<number>("cache.stdTTL");
 export const CACHE_CHECKPERIOD = config.get<number>("cache.checkperiod");
 
-// Constants
+// Primary URLs
 export const MEMPOOL_TIP_HASH_URL =
   MEMPOOL_BASE_URL && `${MEMPOOL_BASE_URL}/api/blocks/tip/hash`;
 export const ESPLORA_TIP_HASH_URL =
   ESPLORA_BASE_URL && `${ESPLORA_BASE_URL}/api/blocks/tip/hash`;
+
+export const MEMPOOL_TIP_HEIGHT_URL =
+  MEMPOOL_BASE_URL && `${MEMPOOL_BASE_URL}/api/blocks/tip/height`;
+export const ESPLORA_TIP_HEIGHT_URL =
+  ESPLORA_BASE_URL && `${ESPLORA_BASE_URL}/api/blocks/tip/height`;
+
 export const MEMPOOL_FEES_URL =
   MEMPOOL_BASE_URL && `${MEMPOOL_BASE_URL}/api/v1/fees/recommended`;
 export const ESPLORA_FEE_ESTIMATES_URL =
   ESPLORA_BASE_URL && `${ESPLORA_BASE_URL}/api/fee-estimates`;
 
+// Fallback URLs
 export const MEMPOOL_TIP_HASH_URL_FALLBACK =
   MEMPOOL_FALLBACK_BASE_URL &&
   `${MEMPOOL_FALLBACK_BASE_URL}/api/blocks/tip/hash`;
 export const ESPLORA_TIP_HASH_URL_FALLBACK =
   ESPLORA_FALLBACK_BASE_URL &&
   `${ESPLORA_FALLBACK_BASE_URL}/api/blocks/tip/hash`;
+
+export const MEMPOOL_TIP_HEIGHT_URL_FALLBACK =
+  MEMPOOL_FALLBACK_BASE_URL &&
+  `${MEMPOOL_FALLBACK_BASE_URL}/api/blocks/tip/height`;
+export const ESPLORA_TIP_HEIGHT_URL_FALLBACK =
+  ESPLORA_FALLBACK_BASE_URL &&
+  `${ESPLORA_FALLBACK_BASE_URL}/api/blocks/tip/height`;
+
 export const MEMPOOL_FEES_URL_FALLBACK =
   MEMPOOL_FALLBACK_BASE_URL &&
   `${MEMPOOL_FALLBACK_BASE_URL}/api/v1/fees/recommended`;
@@ -338,6 +353,33 @@ export async function fetchBlocksTipHash(): Promise<string | null> {
 }
 
 /**
+ * Fetches the current block height.
+ */
+export async function fetchBlocksTipHeight(): Promise<number | null> {
+  const tasks = [
+    (MEMPOOL_TIP_HEIGHT_URL || MEMPOOL_TIP_HEIGHT_URL_FALLBACK) &&
+      fetchAndHandle(
+        MEMPOOL_TIP_HEIGHT_URL,
+        "text",
+        MEMPOOL_TIP_HEIGHT_URL_FALLBACK,
+      ),
+    (ESPLORA_TIP_HEIGHT_URL || ESPLORA_TIP_HEIGHT_URL_FALLBACK) &&
+      fetchAndHandle(
+        ESPLORA_TIP_HEIGHT_URL,
+        "text",
+        ESPLORA_TIP_HEIGHT_URL_FALLBACK,
+      ),
+  ].filter(Boolean);
+  const res = await Promise.allSettled(tasks);
+
+  let res0 = getValueFromFulfilledPromise(res[0]);
+  let res1 = getValueFromFulfilledPromise(res[1]);
+
+  const height = res0 || res1 || null;
+  return height ? Number(height) : null;
+}
+
+/**
  * Gets the current fee estimates from the cache or fetches them if they are not cached.
  */
 export async function getEstimates(): Promise<Estimates> {
@@ -353,12 +395,14 @@ export async function getEstimates(): Promise<Estimates> {
     await fetchEsploraData(),
     await fetchBitcoindData(),
     await fetchBlocksTipHash(),
+    await fetchBlocksTipHeight(),
   ];
-  const [result1, result2, result3, result4] = await Promise.allSettled(tasks);
+  const [result1, result2, result3, result4, result5] = await Promise.allSettled(tasks);
   const mempoolFeeEstimates = getValueFromFulfilledPromise(result1);
   const esploraFeeEstimates = getValueFromFulfilledPromise(result2);
   const bitcoindFeeEstimates = getValueFromFulfilledPromise(result3);
   const blocksTipHash = getValueFromFulfilledPromise(result4);
+  const blocksTipHeight = getValueFromFulfilledPromise(result5);
 
   // Get the minimum fee. If the mempool fee estimates are not available, use a default value of FEE_MINIMUM sat/vbyte as a safety net.
   const feeMinimum = (mempoolFeeEstimates?.minimumFee ?? FEE_MINIMUM) * 1000;
@@ -366,6 +410,7 @@ export async function getEstimates(): Promise<Estimates> {
 
   estimates = {
     current_block_hash: blocksTipHash,
+    current_block_height: blocksTipHeight,
     fee_by_block_target: calculateFees(
       mempoolFeeEstimates,
       esploraFeeEstimates,
