@@ -5,8 +5,8 @@ const log = logger(LOGLEVEL);
 
 export class MempoolProvider implements Provider {
   private url: string;
-  private defaultDepth: number;
-  private defaultTimeout: number;
+  private depth: number;
+  private timeout: number;
 
   constructor(
     url: string,
@@ -14,17 +14,17 @@ export class MempoolProvider implements Provider {
     defaultTimeout: number = 5000,
   ) {
     this.url = url;
-    this.defaultDepth = defaultDepth;
-    this.defaultTimeout = defaultTimeout;
+    this.depth = defaultDepth;
+    this.timeout = defaultTimeout;
   }
 
   async getFeeEstimates(
-    maxDepth: number = this.defaultDepth,
+    maxDepth: number = this.depth,
   ): Promise<FeeByBlockTarget> {
     try {
       const response = await fetchWithTimeout(
         `${this.url}/api/v1/fees/recommended`,
-        this.defaultTimeout,
+        this.timeout,
       );
       const data = (await response.json()) as MempoolFeeEstimates;
 
@@ -47,7 +47,7 @@ export class MempoolProvider implements Provider {
     try {
       const response = await fetchWithTimeout(
         `${this.url}/api/blocks/tip/height`,
-        this.defaultTimeout,
+        this.timeout,
       );
       const height = await response.text();
 
@@ -66,7 +66,7 @@ export class MempoolProvider implements Provider {
     try {
       const response = await fetchWithTimeout(
         `${this.url}/api/blocks/tip/hash`,
-        this.defaultTimeout,
+        this.timeout,
       );
       const hash = await response.text();
 
