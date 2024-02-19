@@ -7,7 +7,8 @@
     "loglevel": "debug",
     "timeout": 5000,
     "feeMultiplier": 1,
-    "feeMinimum": 2
+    "feeMinimum": 2,
+    "maxHeightDelta": 3
   },
   "mempool": {
     "baseUrl": "https://mempool.space",

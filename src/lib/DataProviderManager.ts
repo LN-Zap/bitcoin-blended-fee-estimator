@@ -7,16 +7,19 @@ const log = logger(LOGLEVEL);
 export class DataProviderManager {
   private providers: Provider[] = [];
   private cache: NodeCache;
+  private maxHeightDelta: number;
   private feeMultiplier: number;
   private feeMinimum: number;
   private cacheKey: string = "data";
 
   constructor(
     cacheConfig: CacheConfig,
+    maxHeightDelta: number = 1,
     feeMultiplier: number = 1,
     feeMinimum: number = 1,
   ) {
     this.cache = new NodeCache(cacheConfig);
+    this.maxHeightDelta = maxHeightDelta;
     this.feeMultiplier = feeMultiplier;
     this.feeMinimum = feeMinimum;
   }
@@ -43,7 +46,7 @@ export class DataProviderManager {
       return data;
     }
 
-    const dataPoints = await this.getSortedDataPoints();
+    const dataPoints = await this.getRelevantDataPoints();
     const blockHeight = dataPoints[0].blockHeight;
     const blockHash = dataPoints[0].blockHash;
     const feeEstimates = this.mergeFeeEstimates(dataPoints);
@@ -118,6 +121,30 @@ export class DataProviderManager {
         this.providers.indexOf(a.provider) - this.providers.indexOf(b.provider),
     );
     return dataPoints;
+  }
+
+  /**
+   * Gets relevant data points based on the height difference threshold.
+   *
+   * @returns A promise that resolves to an array of relevant data points.
+   */
+  private async getRelevantDataPoints(): Promise<DataPoint[]> {
+    // Get sorted data points from all providers
+    const dataPoints = await this.getSortedDataPoints();
+
+    // Filter out providers that don't meet the relevancy threshold criteria
+    return dataPoints.filter((dp) => {
+      const isRelevant =
+        dataPoints[0].blockHeight - dp.blockHeight <= this.maxHeightDelta;
+
+      if (!isRelevant) {
+        console.warn({
+          msg: `Data point from block ${dp.blockHeight} was filtered out due to relevancy threshold.`,
+        });
+      }
+
+      return isRelevant;
+    });
   }
 
   /**
