@@ -1,4 +1,4 @@
-import { fetchData, LOGLEVEL } from "../lib/util";
+import { fetchData, LOGLEVEL, TIMEOUT } from "../lib/util";
 import { logger } from "../lib/logger";
 
 const log = logger(LOGLEVEL);
@@ -14,7 +14,7 @@ const log = logger(LOGLEVEL);
  * methods and properties for a data provider.
  *
  * @example
- * const provider = new EsploraProvider('https://blockstream.info/api/');
+ * const provider = new EsploraProvider('https://blockstream.info');
  * const data = await provider.getAllData();
  */
 export class EsploraProvider implements Provider {
@@ -32,7 +32,7 @@ export class EsploraProvider implements Provider {
   constructor(
     url: string,
     defaultDepth: number,
-    defaultTimeout: number = 5000,
+    defaultTimeout: number = TIMEOUT,
   ) {
     this.url = url;
     this.depth = defaultDepth;

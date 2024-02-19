@@ -1,6 +1,7 @@
 import NodeCache from "node-cache";
 import { LOGLEVEL } from "./util";
 import { logger } from "./logger";
+import { MempoolProvider } from "../providers/mempool";
 
 const log = logger(LOGLEVEL);
 
@@ -13,7 +14,7 @@ export class DataProviderManager {
   private cacheKey: string = "data";
 
   constructor(
-    cacheConfig: CacheConfig,
+    cacheConfig: CacheConfig = { stdTTL: 0, checkperiod: 0 },
     maxHeightDelta: number = 1,
     feeMultiplier: number = 1,
     feeMinimum: number = 1,
@@ -113,13 +114,28 @@ export class DataProviderManager {
    *
    * @returns A promise that resolves to an array of sorted data points.
    */
-  private async getSortedDataPoints(): Promise<DataPoint[]> {
+  public async getSortedDataPoints(): Promise<DataPoint[]> {
     const dataPoints = await this.fetchDataPoints();
-    dataPoints.sort(
-      (a, b) =>
+    dataPoints.sort((a, b) => {
+      // Prioritize mempool-based estimates
+      if (
+        a.provider instanceof MempoolProvider &&
+        !(b.provider instanceof MempoolProvider)
+      ) {
+        return -1;
+      } else if (
+        !(a.provider instanceof MempoolProvider) &&
+        b.provider instanceof MempoolProvider
+      ) {
+        return 1;
+      }
+
+      // If both are the same type, sort by block height and then by provider order
+      return (
         b.blockHeight - a.blockHeight ||
-        this.providers.indexOf(a.provider) - this.providers.indexOf(b.provider),
-    );
+        this.providers.indexOf(a.provider) - this.providers.indexOf(b.provider)
+      );
+    });
     return dataPoints;
   }
 
