@@ -1,4 +1,24 @@
-// MempoolFeeEstimates represents the fee estimates for different transaction speeds.
+interface Provider {
+  getBlockHeight(): Promise<number>;
+  getBlockHash(): Promise<string>;
+  getFeeEstimates(): Promise<FeeByBlockTarget>;
+  getAllData(): Promise<ProviderData>;
+}
+
+type DataPoint = {
+  provider: Provider;
+  blockHeight: number;
+  blockHash: string;
+  feeEstimates: FeeByBlockTarget;
+};
+
+// CacheConfig represents the configuration for the cache.
+type CacheConfig = {
+  stdTTL: number;
+  checkperiod: number;
+};
+
+// MempoolFeeEstimates represents the data returned by the Mempool API.
 type MempoolFeeEstimates = {
   [key: string]: number; // dynamic keys with number as value (sat/vb)
   fastestFee: number; // fee for the fastest transaction speed (sat/vb)
@@ -8,6 +28,7 @@ type MempoolFeeEstimates = {
   minimumFee: number; // minimum relay fee (sat/vb)
 };
 
+// MempoolFeeEstimates represents the data returned by the Esplora API.
 type EsploraFeeEstimates = {
   [key: string]: number;
 };
@@ -17,27 +38,11 @@ type FeeByBlockTarget = {
   [target: string]: number; // fees by confirmation target
 };
 
-// Estimates represents the current block hash and fee by block target.
-type Estimates = {
-  current_block_hash: string | null; // current block hash
-  current_block_height: number | null; // current block height
-  fee_by_block_target: FeeByBlockTarget; // fee by block target (in sat/kb)
-};
-
-// BlockTargetMapping represents the mapping of block targets.
-type BlockTargetMapping = {
-  [key: number]: string; // dynamic numeric keys with string as value
-};
-
-// SiteData represents the data of a site.
-interface SiteData {
-  title: string; // title of the site
-  subtitle: string; // subtitle of the site
-  children?: any; // children of the site (optional)
-}
-
 // ExpectedResponseType represents the expected response type for an http request.
 type ExpectedResponseType = "json" | "text"; // can be either 'json' or 'text'
+
+// EstimateMode represents the mode for fee estimation.
+type EstimateMode = "ECONOMICAL" | "CONSERVATIVE"; // estimate mode can be either 'ECONOMICAL' or 'CONSERVATIVE'
 
 // BatchRequest represents a bitcoind batch request response.
 interface EstimateSmartFeeBatchResponse {
@@ -60,18 +65,23 @@ interface BestBlockHashResponse {
   result: string;
 }
 
-// EstimateMode represents the mode for fee estimation.
-type EstimateMode = "ECONOMICAL" | "CONSERVATIVE"; // estimate mode can be either 'ECONOMICAL' or 'CONSERVATIVE'
-
-interface Provider {
-  getBlockHeight(): Promise<number>;
-  getBlockHash(): Promise<string>;
-  getFeeEstimates(): Promise<FeeByBlockTarget>;
-  getAllData(): Promise<ProviderData>;
-}
-
 type ProviderData = {
   blockHeight: number;
   blockHash: string;
   feeEstimates: FeeByBlockTarget;
 };
+
+// Estimates represents the current block hash and fee by block target.
+type Estimates = {
+  current_block_hash: string | null; // current block hash
+  current_block_height: number | null; // current block height
+  fee_by_block_target: FeeByBlockTarget; // fee by block target (in sat/kb)
+};
+
+// SiteData represents the data of a site.
+interface SiteData {
+  baseUrl: string; // base url of the site
+  title: string; // title of the site
+  subtitle: string; // subtitle of the site
+  children?: any; // children of the site (optional)
+}

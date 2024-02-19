@@ -1,5 +1,5 @@
 import { expect, test, mock } from "bun:test";
-import { BitcoindProvider } from "../src/bitcoind";
+import { BitcoindProvider } from "../src/providers/bitcoind";
 import RpcClient from "bitcoind-rpc";
 
 // Mock the RpcClient
@@ -25,7 +25,7 @@ mockRpcClient.getBestBlockHash = (
   });
 
 mockRpcClient.estimateSmartFee = (
-  target: number,
+  target: number = 2,
   mode: string,
   cb: (error: any, result: EstimateSmartFeeBatchResponse) => void,
 ) => cb(null, { result: { feerate: 1000 } });
@@ -35,6 +35,7 @@ const provider = new BitcoindProvider(
   "user",
   "pass",
   [2],
+  "ECONOMICAL",
 );
 
 // Override the rpc property with the mock

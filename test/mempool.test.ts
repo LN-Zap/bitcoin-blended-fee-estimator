@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { MempoolProvider } from "../src/mempool";
+import { MempoolProvider } from "../src/providers/mempool";
 
 const mempoolProvider = new MempoolProvider("https://mempool.space", 6);
 

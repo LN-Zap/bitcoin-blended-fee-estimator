@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { EsploraProvider } from "../src/esplora";
+import { EsploraProvider } from "../src/providers/esplora";
 
 const esploraProvider = new EsploraProvider("https://blockstream.info", 6);
 

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DataProviderManager } from "../src/DataProviderManager";
+import { DataProviderManager } from "../src/lib/DataProviderManager";
 
 class MockProvider1 implements Provider {
   getBlockHeight = () => Promise.resolve(998);
@@ -68,13 +68,14 @@ manager.registerProvider(new MockProvider2());
 manager.registerProvider(new MockProvider3());
 
 test("should merge fee estimates from multiple providers correctly", async () => {
-  const mergedData = await manager.getMergedData();
-  expect(mergedData.blockHeight).toEqual(1000);
-  expect(mergedData.blockHash).toEqual("hash3");
-  expect(mergedData.feeEstimates).toEqual({
-    "1": 30,
-    "2": 20,
-    "3": 5,
-    "5": 3,
+  const mergedData = await manager.getData();
+  expect(mergedData.current_block_height).toEqual(1000);
+  expect(mergedData.current_block_hash).toEqual("hash3");
+  expect(mergedData.fee_by_block_target).toEqual({
+    "1": 30000,
+    "2": 20000,
+    "3": 5000,
+    "5": 3000,
+    "10": 1000,
   });
 });

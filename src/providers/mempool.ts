@@ -1,20 +1,28 @@
-import { fetchData, LOGLEVEL } from "./util";
-import { logger } from "./logger";
+import { fetchData, LOGLEVEL } from "../lib/util";
+import { logger } from "../lib/logger";
 
 const log = logger(LOGLEVEL);
 
 /**
- * EsploraProvider class implements the Provider interface.
- * It provides methods to fetch data from a Esplora API.
+ * A class that provides data from a Mempool server.
+ *
+ * The `MempoolProvider` class fetches data such as the current block height, block hash,
+ * and fee estimates from a Mempool server. It provides methods to fetch each of these
+ * data points individually, as well as a method to fetch all of them at once.
+ *
+ * @example
+ * const provider = new MempoolProvider('https://mempool.space/api/');
+ * const data = await provider.getAllData();
  */
-export class EsploraProvider implements Provider {
+export class MempoolProvider implements Provider {
   private url: string;
   private depth: number;
   private timeout: number;
 
   /**
-   * Constructs a new EsploraProvider.
-   * @param url - The base URL of the Esplora API.
+   * Constructs a new MempoolProvider.
+   *
+   * @param url - The base URL of the Mempool API.
    * @param defaultDepth - The default depth for fee estimates.
    * @param defaultTimeout - The default timeout for fetch requests.
    */
@@ -29,18 +37,23 @@ export class EsploraProvider implements Provider {
   }
 
   /**
-   * Fetches fee estimates from the Esplora API.
+   * Fetches fee estimates from the Mempool API.
+   *
    * @param maxDepth - The maximum depth for fee estimates.
    * @returns A promise that resolves to an object of fee estimates.
    */
   async getFeeEstimates(
     maxDepth: number = this.depth,
   ): Promise<FeeByBlockTarget> {
-    const data = await fetchData<EsploraFeeEstimates>(
-      `${this.url}/api/fee-estimates`,
+    const data = await fetchData<MempoolFeeEstimates>(
+      `${this.url}/api/v1/fees/recommended`,
       "json",
       this.timeout,
     );
+
+    if (!data.fastestFee || !data.halfHourFee || !data.hourFee) {
+      throw new Error("Invalid fee data");
+    }
 
     const feeEstimates: FeeByBlockTarget = this.transformFeeData(
       data,
@@ -50,7 +63,8 @@ export class EsploraProvider implements Provider {
   }
 
   /**
-   * Fetches the current block height from the Esplora API.
+   * Fetches the current block height from the Mempool API.
+   *
    * @returns A promise that resolves to the current block height.
    */
   async getBlockHeight(): Promise<number> {
@@ -68,7 +82,8 @@ export class EsploraProvider implements Provider {
   }
 
   /**
-   * Fetches the current block hash from the Esplora API.
+   * Fetches the current block hash from the Mempool API.
+   *
    * @returns A promise that resolves to the current block hash.
    */
   async getBlockHash(): Promise<string> {
@@ -89,7 +104,8 @@ export class EsploraProvider implements Provider {
   }
 
   /**
-   * Fetches all data (block height, block hash, and fee estimates) from the Esplora API.
+   * Fetches all data (block height, block hash, and fee estimates) from the Mempool API.
+   *
    * @returns A promise that resolves to an object of all data.
    */
   public async getAllData(): Promise<ProviderData> {
@@ -106,33 +122,27 @@ export class EsploraProvider implements Provider {
         feeEstimates,
       };
     } catch (error) {
-      log.error({ msg: "Error fetching all data from Esplora:", error });
+      log.error({ msg: "Error fetching all data from Mempool:", error });
       throw error;
     }
   }
 
   /**
    * Transforms the fetched fee data into a FeeByBlockTarget object.
+   *
    * @param data - The fetched fee data.
    * @param maxDepth - The maximum depth for fee estimates.
    * @returns A FeeByBlockTarget object.
    */
   private transformFeeData(
-    data: EsploraFeeEstimates,
+    data: MempoolFeeEstimates,
     maxDepth: number,
   ): FeeByBlockTarget {
     const feeEstimates: FeeByBlockTarget = {};
 
-    // Iterate over the keys in the data object
-    for (const target in data) {
-      // Convert the target to a number
-      const targetNumber = Number(target);
-
-      // If the target is less than or equal to the maximum depth, add it to the fee estimates
-      if (!isNaN(targetNumber) && targetNumber <= maxDepth) {
-        feeEstimates[targetNumber] = data[target];
-      }
-    }
+    if (maxDepth >= 1) feeEstimates[1] = data.fastestFee;
+    if (maxDepth >= 3) feeEstimates[3] = data.halfHourFee;
+    if (maxDepth >= 6) feeEstimates[6] = data.hourFee;
 
     return feeEstimates;
   }
