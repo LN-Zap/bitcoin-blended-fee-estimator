@@ -76,6 +76,5 @@ test("should merge fee estimates from multiple providers correctly", async () =>
     "2": 20000,
     "3": 5000,
     "5": 3000,
-    "10": 1000,
   });
 });

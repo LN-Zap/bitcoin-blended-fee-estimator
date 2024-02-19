@@ -35,6 +35,7 @@ const LOGLEVEL = config.get<string>("settings.loglevel");
 const TIMEOUT = config.get<number>("settings.timeout");
 const FEE_MULTIPLIER = config.get<number>("settings.feeMultiplier");
 const FEE_MINIMUM = config.get<number>("settings.feeMinimum");
+const MAX_HEIGHT_DELTA = config.get<number>("settings.maxHeightDelta");
 const CACHE_STDTTL = config.get<number>("cache.stdTTL");
 const CACHE_CHECKPERIOD = config.get<number>("cache.checkperiod");
 
@@ -49,6 +50,7 @@ const service = new DataProviderManager(
     stdTTL: CACHE_STDTTL,
     checkperiod: CACHE_CHECKPERIOD,
   },
+  MAX_HEIGHT_DELTA,
   FEE_MULTIPLIER,
   FEE_MINIMUM,
 );
