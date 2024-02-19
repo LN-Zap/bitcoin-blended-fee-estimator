@@ -66,16 +66,6 @@ MEMPOOL_FALLBACK_BASE_URL &&
     new MempoolProvider(MEMPOOL_FALLBACK_BASE_URL, MEMPOOL_DEPTH, TIMEOUT),
   );
 
-ESPLORA_BASE_URL &&
-  service.registerProvider(
-    new EsploraProvider(ESPLORA_BASE_URL, 1008, TIMEOUT),
-  );
-
-ESPLORA_FALLBACK_BASE_URL &&
-  service.registerProvider(
-    new EsploraProvider(ESPLORA_FALLBACK_BASE_URL, 1008, TIMEOUT),
-  );
-
 BITCOIND_BASE_URL &&
   service.registerProvider(
     new BitcoindProvider(
@@ -85,6 +75,16 @@ BITCOIND_BASE_URL &&
       BITCOIND_CONF_TARGETS,
       BITCOIND_ESTIMATE_MODE,
     ),
+  );
+
+ESPLORA_BASE_URL &&
+  service.registerProvider(
+    new EsploraProvider(ESPLORA_BASE_URL, 1008, TIMEOUT),
+  );
+
+ESPLORA_FALLBACK_BASE_URL &&
+  service.registerProvider(
+    new EsploraProvider(ESPLORA_FALLBACK_BASE_URL, 1008, TIMEOUT),
   );
 
 // Define the app.
