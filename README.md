@@ -97,13 +97,13 @@ Here are the available configuration options:
 
 ### Bitcoind settings
 
-| Config Key              | Description                                                                    | Default Value                                                                                                 | Environment Variable     |
-| ----------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `bitcoind.baseUrl`      | The base URL of the bitcoind instance to connect to. Set to `null` to disable. | `http://localhost:8332`                                                                                       | `BITCOIND_BASE_URL`      |
-| `bitcoind.username`     | The username to use for authenticating with the bitcoind instance              | -                                                                                                             | `BITCOIND_USERNAME`      |
-| `bitcoind.password`     | The password to use for authenticating with the bitcoind instance              | -                                                                                                             | `BITCOIND_PASSWORD`      |
-| `bitcoind.confTargets`  | The block targets to use for history-based fee estimates                       | `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 144, 504, 1008]` | `BITCOIND_CONF_TARGETS`  |
-| `bitcoind.estimateMode` | The estimate mode to use for fee estimates (`ECONOMICAL` or `CONSERVATIVE`)    | `ECONOMICAL`                                                                                                  | `BITCOIND_ESTIMATE_MODE` |
+| Config Key              | Description                                                                    | Default Value                                                                                                                          | Environment Variable     |
+| ----------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `bitcoind.baseUrl`      | The base URL of the bitcoind instance to connect to. Set to `null` to disable. | `http://localhost:8332`                                                                                                                | `BITCOIND_BASE_URL`      |
+| `bitcoind.username`     | The username to use for authenticating with the bitcoind instance              | -                                                                                                                                      | `BITCOIND_USERNAME`      |
+| `bitcoind.password`     | The password to use for authenticating with the bitcoind instance              | -                                                                                                                                      | `BITCOIND_PASSWORD`      |
+| `bitcoind.confTargets`  | The block targets to use for history-based fee estimates                       | `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 144, 288, 432, 504, 576, 720, 864, 1008]` | `BITCOIND_CONF_TARGETS`  |
+| `bitcoind.estimateMode` | The estimate mode to use for fee estimates (`ECONOMICAL` or `CONSERVATIVE`)    | `ECONOMICAL`                                                                                                                           | `BITCOIND_ESTIMATE_MODE` |
 
 ## Development
 
