@@ -8,6 +8,10 @@ type MempoolFeeEstimates = {
   minimumFee: number; // minimum relay fee (sat/vb)
 };
 
+type EsploraFeeEstimates = {
+  [key: string]: number;
+};
+
 // FeeByBlockTarget represents the fee by block target.
 type FeeByBlockTarget = {
   [target: string]: number; // fees by confirmation target

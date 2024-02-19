@@ -111,6 +111,29 @@ export async function fetchWithTimeout(
 }
 
 /**
+ * Fetches data from a specific endpoint of the Esplora API.
+ * @param endpoint - The endpoint to fetch data from.
+ * @param responseType - The type of the response ('json' or 'text').
+ * @returns A promise that resolves to the fetched data.
+ */
+export async function fetchData<T>(
+  url: string,
+  responseType: "json" | "text",
+  timeout: number,
+): Promise<T> {
+  try {
+    const response = await fetchWithTimeout(url, timeout);
+    const data = await (responseType === "json"
+      ? response.json()
+      : response.text());
+    return data as T;
+  } catch (error) {
+    log.error({ msg: `Error fetching data from ${url}:`, error });
+    throw error;
+  }
+}
+
+/**
  * Fetches data from the given URL and validates and processes the response.
  */
 export async function fetchAndProcess(
