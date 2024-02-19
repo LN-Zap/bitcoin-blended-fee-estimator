@@ -40,7 +40,7 @@ interface SiteData {
 type ExpectedResponseType = "json" | "text"; // can be either 'json' or 'text'
 
 // BatchRequest represents a bitcoind batch request response.
-interface BitcoindRpcBatchResponse {
+interface EstimateSmartFeeBatchResponse {
   result?: EstimateSmartFeeResponse;
   error?: any;
 }
@@ -50,6 +50,14 @@ interface EstimateSmartFeeResponse {
   feerate?: number; // estimate fee rate in BTC/kB (only present if no errors were encountered)
   errors?: [string]; // errors encountered during processing (if there are any)
   blocks?: number; // block number where estimate was found
+}
+
+interface BlockCountResponse {
+  result: number;
+}
+
+interface BestBlockHashResponse {
+  result: string;
 }
 
 // EstimateMode represents the mode for fee estimation.

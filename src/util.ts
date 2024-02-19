@@ -303,7 +303,7 @@ export async function fetchBitcoindData(): Promise<FeeByBlockTarget | null> {
 
     rpc.batch(
       batchCall,
-      (error: Error | null, response: BitcoindRpcBatchResponse[]) => {
+      (error: Error | null, response: EstimateSmartFeeBatchResponse[]) => {
         if (error) {
           log.error({
             message: "Unable to fetch fee estimates from bitcoind: {error}",
