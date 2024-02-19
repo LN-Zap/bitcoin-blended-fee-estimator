@@ -1,4 +1,8 @@
 import NodeCache from "node-cache";
+import { LOGLEVEL } from "./util";
+import { logger } from "./logger";
+
+const log = logger(LOGLEVEL);
 
 export class DataPoint {
   constructor(
@@ -86,7 +90,7 @@ export class DataProviderManager {
   private mergeFeeEstimates(dataPoints: DataPoint[]): FeeByBlockTarget {
     // Start with the fee estimates from the most relevant provider
     let mergedEstimates = { ...dataPoints[0].feeEstimates };
-    console.log("Initial mergedEstimates:", mergedEstimates);
+    log.debug({ msg: "Initial mergedEstimates:", mergedEstimates });
 
     // Iterate over the remaining data points
     for (let i = 1; i < dataPoints.length; i++) {
@@ -94,7 +98,7 @@ export class DataProviderManager {
       const keys = Object.keys(estimates)
         .map(Number)
         .sort((a, b) => a - b);
-      console.log(`Estimates for dataPoint ${i}:`, estimates);
+      log.debug({ msg: `Estimates for dataPoint ${i}:`, estimates });
 
       keys.forEach((key) => {
         // Only add the estimate if it has a higher confirmation target and a lower fee
@@ -102,15 +106,15 @@ export class DataProviderManager {
           key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
           estimates[key] < Math.min(...Object.values(mergedEstimates))
         ) {
-          console.log(
-            `Adding estimate with target ${key} and fee ${estimates[key]} to mergedEstimates`,
+          log.debug(
+            {msg: `Adding estimate with target ${key} and fee ${estimates[key]} to mergedEstimates` },
           );
           mergedEstimates[key] = estimates[key];
         }
       });
     }
 
-    console.log("Final mergedEstimates:", mergedEstimates);
+    log.debug({ msg: "Final mergedEstimates:", mergedEstimates });
     return mergedEstimates;
   }
 }

@@ -10,7 +10,7 @@ type MempoolFeeEstimates = {
 
 // FeeByBlockTarget represents the fee by block target.
 type FeeByBlockTarget = {
-  [key: number]: number; // fees by confirmation target
+  [target: string]: number; // fees by confirmation target
 };
 
 // Estimates represents the current block hash and fee by block target.
@@ -58,4 +58,8 @@ interface Provider {
   getAllData(): Promise<ProviderData>;
 }
 
-type ProviderData = [number, string, FeeByBlockTarget];
+type ProviderData = {
+  blockHeight: number;
+  blockHash: string;
+  feeEstimates: FeeByBlockTarget;
+};

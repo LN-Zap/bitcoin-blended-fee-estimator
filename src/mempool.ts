@@ -1,17 +1,31 @@
+import { fetchWithTimeout, LOGLEVEL } from "./util";
+import { logger } from "./logger";
+
+const log = logger(LOGLEVEL);
+
 export class MempoolProvider implements Provider {
   private url: string;
   private defaultDepth: number;
+  private defaultTimeout: number;
 
-  constructor(url: string, defaultDepth: number) {
+  constructor(
+    url: string,
+    defaultDepth: number,
+    defaultTimeout: number = 5000,
+  ) {
     this.url = url;
     this.defaultDepth = defaultDepth;
+    this.defaultTimeout = defaultTimeout;
   }
 
   async getFeeEstimates(
     maxDepth: number = this.defaultDepth,
   ): Promise<FeeByBlockTarget> {
     try {
-      const response = await fetch(`${this.url}/api/v1/fees/recommended`);
+      const response = await fetchWithTimeout(
+        `${this.url}/api/v1/fees/recommended`,
+        this.defaultTimeout,
+      );
       const data = (await response.json()) as MempoolFeeEstimates;
 
       if (!data.fastestFee || !data.halfHourFee || !data.hourFee) {
@@ -24,14 +38,17 @@ export class MempoolProvider implements Provider {
       );
       return feeEstimates;
     } catch (error) {
-      console.error("Error getting fee estimates from Mempool:", error);
+      log.error({ msg: "Error getting fee estimates from Mempool:", error });
       throw error;
     }
   }
 
   async getBlockHeight(): Promise<number> {
     try {
-      const response = await fetch(`${this.url}/api/blocks/tip/height`);
+      const response = await fetchWithTimeout(
+        `${this.url}/api/blocks/tip/height`,
+        this.defaultTimeout,
+      );
       const height = await response.text();
 
       if (isNaN(Number(height))) {
@@ -40,14 +57,17 @@ export class MempoolProvider implements Provider {
 
       return Number(height);
     } catch (error) {
-      console.error("Error getting block height from Mempool:", error);
+      log.error({ msg: "Error getting block height from Mempool:", error });
       throw error;
     }
   }
 
   async getBlockHash(): Promise<string> {
     try {
-      const response = await fetch(`${this.url}/api/blocks/tip/hash`);
+      const response = await fetchWithTimeout(
+        `${this.url}/api/blocks/tip/hash`,
+        this.defaultTimeout,
+      );
       const hash = await response.text();
 
       // Bitcoin block hash is a 64-character long hexadecimal string
@@ -59,12 +79,12 @@ export class MempoolProvider implements Provider {
 
       return hash;
     } catch (error) {
-      console.error("Error getting block hash from Mempool:", error);
+      log.error({ msg: "Error getting block hash from Mempool:", error });
       throw error;
     }
   }
 
-  public async getAllData(): Promise<[number, string, FeeByBlockTarget]> {
+  public async getAllData(): Promise<ProviderData> {
     try {
       const [blockHeight, blockHash, feeEstimates] = await Promise.all([
         this.getBlockHeight(),
@@ -72,9 +92,13 @@ export class MempoolProvider implements Provider {
         this.getFeeEstimates(),
       ]);
 
-      return [blockHeight, blockHash, feeEstimates];
+      return {
+        blockHeight,
+        blockHash,
+        feeEstimates,
+      };
     } catch (error) {
-      console.error("Error fetching all data:", error);
+      log.error({ msg: "Error fetching all data from Mempool:", error });
       throw error;
     }
   }

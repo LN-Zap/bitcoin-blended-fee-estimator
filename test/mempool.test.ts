@@ -24,8 +24,9 @@ test("getBlockHash", async () => {
 });
 
 test("getAllData", async () => {
-  const [blockHeight, blockHash, feeEstimates] =
+  const { blockHeight, blockHash, feeEstimates } =
     await mempoolProvider.getAllData();
+
   expect(typeof blockHeight).toBe("number");
   expect(blockHash).toMatch(/^[a-fA-F0-9]{64}$/);
   expect(Object.keys(feeEstimates)).toEqual(
