@@ -1,4 +1,4 @@
-import { fetchData, LOGLEVEL } from "../lib/util";
+import { fetchData, LOGLEVEL, TIMEOUT } from "../lib/util";
 import { logger } from "../lib/logger";
 
 const log = logger(LOGLEVEL);
@@ -29,7 +29,7 @@ export class MempoolProvider implements Provider {
   constructor(
     url: string,
     defaultDepth: number,
-    defaultTimeout: number = 5000,
+    defaultTimeout: number = TIMEOUT,
   ) {
     this.url = url;
     this.depth = defaultDepth;
