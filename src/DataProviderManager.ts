@@ -106,9 +106,9 @@ export class DataProviderManager {
           key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
           estimates[key] < Math.min(...Object.values(mergedEstimates))
         ) {
-          log.debug(
-            {msg: `Adding estimate with target ${key} and fee ${estimates[key]} to mergedEstimates` },
-          );
+          log.debug({
+            msg: `Adding estimate with target ${key} and fee ${estimates[key]} to mergedEstimates`,
+          });
           mergedEstimates[key] = estimates[key];
         }
       });
