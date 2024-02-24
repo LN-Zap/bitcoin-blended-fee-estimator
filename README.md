@@ -4,11 +4,13 @@ This project provides bitcoin fee estimates using a blend of mempool-based and h
 
 ## Fee Estimates
 
-This application uses two APIs to get fee estimates for Bitcoin transactions:
+This application combines data from multiple APIs to provide fee estimates for Bitcoin transactions:
 
 - [**Mempool API**](https://github.com/mempool/mempool): This API is used to get mempool-based fee estimates for upcoming blocks. The application fetches the fastestFee, halfHourFee, hourFee, economyFee, and minimumFee from the Mempool API and uses these estimates to calculate the fee for upcoming blocks.
 
 - [**Esplora API**](https://github.com/Blockstream/esplora/blob/master/API.md): This API is used to get history-based fee estimates for further future blocks. The application fetches fee estimates from the Esplora API (which gets its data from bitcoind) and adds them to the fee estimates if they are lower than the lowest fee estimate from the Mempool API.
+
+- [**Bitcoin Core API**](https://bitcoincore.org/en/doc/0.20.0/rpc/util/estimatesmartfee/): This API provides an alternative source for fee estimates for further future blocks. The application fetches fee estimates directly from bitcoind and adds them to the fee estimates. You can choose between economical and conservative estimates.
 
 Fee estimates are multipled by a configurable multiplier (1 by default) to allow a more conservative or aggressive approach, and cached for a configurable amount of time (15 seconds by default).
 
@@ -18,15 +20,18 @@ This application exposes a single API endpoint at `/v1/fee-estimates`. This endp
 
 ```json
 {
-  "current_block_hash": "0000000000000000000044ab897830778c73d33fdeddde1f21e875fae2150378",
+  "current_block_height": 831800,
+  "current_block_hash": "000000000000000000028ff0332953ffd90c7146938231f4f2008e5e47f78754",
   "fee_by_block_target": {
-    "1": 81900,
-    "2": 78750,
-    "3": 74550,
-    "6": 68700,
-    "144": 64951,
-    "504": 53464,
-    "1008": 28175
+    "1": 16000,
+    "3": 15000,
+    "6": 14000,
+    "7": 13012,
+    "11": 12278,
+    "25": 11969,
+    "144": 11030,
+    "432": 10599,
+    "504": 10598
   }
 }
 ```
@@ -95,11 +100,11 @@ Here are the available configuration options:
 | `esplora.baseUrl`          | The base URL of the Esplora API instance to connect to. Set to `null` to disable.              | `https://blockstream.info` | `ESPLORA_BASE_URL`          |
 | `esplora.fallbacekBaseUrl` | The base URL of the Esplora API instance to fallback to if the primary instance is unavailable | -                          | `ESPLORA_FALLBACK_BASE_URL` |
 
-### Bitcoind settings
+### Bitcoin Core settings
 
 | Config Key              | Description                                                                    | Default Value                                                                                                                          | Environment Variable     |
 | ----------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `bitcoind.baseUrl`      | The base URL of the bitcoind instance to connect to. Set to `null` to disable. | `http://localhost:8332`                                                                                                                | `BITCOIND_BASE_URL`      |
+| `bitcoind.baseUrl`      | The base URL of the bitcoind instance to connect to. | -                                                                                                                | `BITCOIND_BASE_URL`      |
 | `bitcoind.username`     | The username to use for authenticating with the bitcoind instance              | -                                                                                                                                      | `BITCOIND_USERNAME`      |
 | `bitcoind.password`     | The password to use for authenticating with the bitcoind instance              | -                                                                                                                                      | `BITCOIND_PASSWORD`      |
 | `bitcoind.confTargets`  | The block targets to use for history-based fee estimates                       | `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 144, 288, 432, 504, 576, 720, 864, 1008]` | `BITCOIND_CONF_TARGETS`  |
