@@ -41,6 +41,10 @@ const CACHE_CHECKPERIOD = config.get<number>("cache.checkperiod");
 
 const log = logger(LOGLEVEL);
 
+const middlewareLogger = (message: string, ...rest: string[]) => {
+  log.info({ msg: message, ...rest });
+}
+
 // Log the configuration values.
 log.info(config.util.toObject());
 
@@ -105,7 +109,7 @@ app.get("/health/live", async (c) => {
 });
 
 // Add middleware.
-app.use("*", honoLogger());
+app.use("*", honoLogger(middlewareLogger));
 app.use("*", etag());
 app.use("*", cors({ origin: "*" }));
 app.use("/static/*", serveStatic({ root: "./" }));
