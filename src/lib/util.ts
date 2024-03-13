@@ -22,7 +22,7 @@ export async function fetchWithTimeout(
   url: string,
   timeout: number = TIMEOUT,
 ): Promise<Response> {
-  log.debug({ message: `Starting fetch request to ${url}` });
+  log.debug({ message: `Starting fetch request to "${url}"` });
   const fetchPromise = fetch(url);
   const timeoutPromise = new Promise((_, reject) =>
     setTimeout(
@@ -63,7 +63,7 @@ export async function fetchData<T>(
       : response.text());
     return data as T;
   } catch (error) {
-    log.error({ msg: `Error fetching data from ${url}:`, error });
+    log.error({ msg: `Error fetching data from "${url}":`, error });
     throw error;
   }
 }
