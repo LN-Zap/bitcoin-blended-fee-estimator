@@ -3,7 +3,7 @@ import { LOGLEVEL } from "./util";
 import { logger } from "./logger";
 import { MempoolProvider } from "../providers/mempool";
 
-const log = logger(LOGLEVEL);
+const log = logger(LOGLEVEL, "data-provider-manager");
 
 export class DataProviderManager {
   private providers: Provider[] = [];

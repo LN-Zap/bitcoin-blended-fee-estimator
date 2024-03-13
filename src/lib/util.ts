@@ -4,7 +4,7 @@ import { logger } from "./logger";
 export const TIMEOUT = config.get<number>("settings.timeout");
 export const LOGLEVEL = config.get<string>("settings.loglevel");
 
-const log = logger(LOGLEVEL);
+const log = logger(LOGLEVEL, "util");
 
 /**
  * Fetches a resource from a URL with a timeout.
