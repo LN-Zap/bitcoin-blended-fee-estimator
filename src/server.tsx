@@ -39,7 +39,7 @@ const MAX_HEIGHT_DELTA = config.get<number>("settings.maxHeightDelta");
 const CACHE_STDTTL = config.get<number>("cache.stdTTL");
 const CACHE_CHECKPERIOD = config.get<number>("cache.checkperiod");
 
-const log = logger(LOGLEVEL);
+const log = logger(LOGLEVEL, "server");
 
 const middlewareLogger = (message: string, ...rest: string[]) => {
   log.info({ msg: message, ...rest });

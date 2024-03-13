@@ -12,7 +12,7 @@ import pino, { type Logger } from "pino";
  * @param loglevel - The log level to set for the logger.
  * @returns A new logger with the specified log level.
  */
-export function logger(loglevel: string): Logger {
+export function logger(loglevel: string, scope?: string | undefined): Logger {
   let log: Logger;
   const pinoOptions = {
     level: loglevel,
@@ -34,5 +34,6 @@ export function logger(loglevel: string): Logger {
       log = pino(pinoOptions);
     }
   }
-  return log;
+
+  return scope ? log.child({ scope }) : log;
 }

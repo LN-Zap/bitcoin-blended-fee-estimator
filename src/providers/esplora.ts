@@ -1,7 +1,7 @@
 import { fetchData, LOGLEVEL, TIMEOUT } from "../lib/util";
 import { logger } from "../lib/logger";
 
-const log = logger(LOGLEVEL);
+const log = logger(LOGLEVEL, "esplora");
 
 /**
  * A class that provides data from an Esplora server.

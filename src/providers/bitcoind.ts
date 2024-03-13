@@ -3,7 +3,7 @@ import { LOGLEVEL } from "../lib/util";
 import { logger } from "../lib/logger";
 import { promisify } from "util";
 
-const log = logger(LOGLEVEL);
+const log = logger(LOGLEVEL, "bitcoind");
 
 /**
  * A class that provides data from a Bitcoind server.
