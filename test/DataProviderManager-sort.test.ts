@@ -32,11 +32,11 @@ class MockProvider3 implements Provider {
   getBlockHash = () => Promise.resolve("hash2");
   getFeeEstimates = () => Promise.resolve({});
   getAllData = () =>
-    Promise.resolve(({
+    Promise.resolve({
       blockHeight: 999,
       blockHash: "hash2",
       feeEstimates: {},
-    }));
+    });
 }
 
 const manager = new DataProviderManager({ stdTTL: 0, checkperiod: 0 });

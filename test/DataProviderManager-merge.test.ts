@@ -86,7 +86,12 @@ class MockProvider3 implements Provider {
 const maxHeightDelta = 2;
 const feeMultiplier = 2;
 const feeMinimum = 2;
-const manager = new DataProviderManager({ stdTTL: 0, checkperiod: 0 }, maxHeightDelta, feeMultiplier, feeMinimum);
+const manager = new DataProviderManager(
+  { stdTTL: 0, checkperiod: 0 },
+  maxHeightDelta,
+  feeMultiplier,
+  feeMinimum,
+);
 manager.registerProvider(new MockProvider0());
 manager.registerProvider(new MockProvider1());
 manager.registerProvider(new MockProvider2());

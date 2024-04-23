@@ -43,7 +43,7 @@ const log = logger(LOGLEVEL, "server");
 
 const middlewareLogger = (message: string, ...rest: string[]) => {
   log.info({ msg: message, ...rest });
-}
+};
 
 // Log the configuration values.
 log.info(config.util.toObject());
