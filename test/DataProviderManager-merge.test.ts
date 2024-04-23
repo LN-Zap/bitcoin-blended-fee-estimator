@@ -69,6 +69,8 @@ class MockProvider3 implements Provider {
       "2": 15,
       "3": 5,
       "5": 3,
+      "6": 3,
+      "7": 3,
     });
   getAllData = () =>
     Promise.resolve({
@@ -79,6 +81,8 @@ class MockProvider3 implements Provider {
         "2": 15,
         "3": 5,
         "5": 3,
+        "6": 3,
+        "7": 3,
       },
     });
 }
