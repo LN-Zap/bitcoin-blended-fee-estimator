@@ -196,12 +196,10 @@ export class DataProviderManager {
       log.debug({ msg: `Estimates for dataPoint ${providerName}`, estimates });
 
       keys.forEach((key) => {
-        // Only add the estimate if it has a higher confirmation target and a lower fee
+        // Only add the estimate if it has a higher confirmation target and a lower fee.
         if (
-          (!mergedEstimates[key] && estimates[key]) ||
-          (mergedEstimates[key] &&
-            key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
-            estimates[key] < Math.min(...Object.values(mergedEstimates)))
+          key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
+          estimates[key] < Math.min(...Object.values(mergedEstimates))
         ) {
           log.debug({
             msg: `Adding estimate from ${providerName} with target ${key} and fee ${estimates[key]} to mergedEstimates`,
