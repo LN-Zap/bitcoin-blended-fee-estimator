@@ -89,7 +89,7 @@ export class DataProviderManager {
             Object.entries(feeEstimates).map(([key, value]) => [
               key,
               Math.round((value + Number.EPSILON) * 1000) / 1000,
-            ])
+            ]),
           );
 
           return {
@@ -206,9 +206,9 @@ export class DataProviderManager {
       keys.forEach((key) => {
         // Only add the estimate if it has a higher confirmation target and a lower fee.
         if (
-          (Object.keys(mergedEstimates).length === 0) ||
+          Object.keys(mergedEstimates).length === 0 ||
           (key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
-          estimates[key] < Math.min(...Object.values(mergedEstimates)))
+            estimates[key] < Math.min(...Object.values(mergedEstimates)))
         ) {
           log.debug({
             msg: `Adding estimate from ${providerName} with target ${key} and fee ${estimates[key]} to mergedEstimates`,
