@@ -52,17 +52,11 @@ export class DataProviderManager {
     const blockHash = dataPoints[0].blockHash;
     const feeEstimates = this.mergeFeeEstimates(dataPoints);
 
-    // Apply the fee minimum and multiplier.
+    // Apply the fee formatter and multiplier.
     for (let [blockTarget, estimate] of Object.entries(feeEstimates)) {
-      if (estimate >= this.feeMinimum) {
-        feeEstimates[blockTarget] = Math.ceil(
-          (estimate *= 1000 * this.feeMultiplier),
-        );
-      } else {
-        log.warn({
-          msg: `Fee estimate for target ${blockTarget} was below the minimum of ${this.feeMinimum}.`,
-        });
-      }
+      feeEstimates[blockTarget] = Math.ceil(
+        (estimate *= 1000 * this.feeMultiplier),
+      );
     }
 
     data = {
@@ -164,19 +158,40 @@ export class DataProviderManager {
   }
 
   /**
+   * Filters fee estimates based on the fee minimum.
+   *
+   * @param feeEstimates - An object containing fee estimates.
+   * @returns An object containing the filtered fee estimates.
+   */
+  private filterEstimates(feeEstimates: FeeByBlockTarget): FeeByBlockTarget {
+    return Object.fromEntries(
+      Object.entries(feeEstimates).filter(
+        ([blockTarget, estimate]) => {
+          if (estimate < this.feeMinimum) {
+            log.warn({
+              msg: `Fee estimate for target ${blockTarget} was below the minimum of ${this.feeMinimum}.`,
+            });
+            return false;
+          }
+          return true;
+        }
+      )
+    );
+  }
+
+  /**
    * Merges fee estimates from multiple data points.
    *
    * @param dataPoints - An array of data points from which to merge fee estimates.
    * @returns An object containing the merged fee estimates.
    */
   private mergeFeeEstimates(dataPoints: DataPoint[]): FeeByBlockTarget {
-    // Start with the fee estimates from the most relevant provider
-    let mergedEstimates = { ...dataPoints[0].feeEstimates };
-    log.debug({ msg: "Initial mergedEstimates:", mergedEstimates });
-    // Iterate over the remaining data points
-    for (let i = 1; i < dataPoints.length; i++) {
-      const estimates = dataPoints[i].feeEstimates;
-      const providerName = dataPoints[i].provider.constructor.name;
+    let mergedEstimates: FeeByBlockTarget = {};
+
+    // Iterate over all data points
+    for (const dataPoint of dataPoints) {
+      const estimates = this.filterEstimates(dataPoint.feeEstimates);
+      const providerName = dataPoint.provider.constructor.name;
       const keys = Object.keys(estimates)
         .map(Number)
         .sort((a, b) => a - b);
@@ -185,8 +200,9 @@ export class DataProviderManager {
       keys.forEach((key) => {
         // Only add the estimate if it has a higher confirmation target and a lower fee
         if (
-          key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
-          estimates[key] < Math.min(...Object.values(mergedEstimates))
+          (!mergedEstimates[key] && estimates[key]) ||
+          (mergedEstimates[key] && key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
+          estimates[key] < Math.min(...Object.values(mergedEstimates)))
         ) {
           log.debug({
             msg: `Adding estimate from ${providerName} with target ${key} and fee ${estimates[key]} to mergedEstimates`,
