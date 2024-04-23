@@ -165,17 +165,15 @@ export class DataProviderManager {
    */
   private filterEstimates(feeEstimates: FeeByBlockTarget): FeeByBlockTarget {
     return Object.fromEntries(
-      Object.entries(feeEstimates).filter(
-        ([blockTarget, estimate]) => {
-          if (estimate < this.feeMinimum) {
-            log.warn({
-              msg: `Fee estimate for target ${blockTarget} was below the minimum of ${this.feeMinimum}.`,
-            });
-            return false;
-          }
-          return true;
+      Object.entries(feeEstimates).filter(([blockTarget, estimate]) => {
+        if (estimate < this.feeMinimum) {
+          log.warn({
+            msg: `Fee estimate for target ${blockTarget} was below the minimum of ${this.feeMinimum}.`,
+          });
+          return false;
         }
-      )
+        return true;
+      }),
     );
   }
 
@@ -201,8 +199,9 @@ export class DataProviderManager {
         // Only add the estimate if it has a higher confirmation target and a lower fee
         if (
           (!mergedEstimates[key] && estimates[key]) ||
-          (mergedEstimates[key] && key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
-          estimates[key] < Math.min(...Object.values(mergedEstimates)))
+          (mergedEstimates[key] &&
+            key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
+            estimates[key] < Math.min(...Object.values(mergedEstimates)))
         ) {
           log.debug({
             msg: `Adding estimate from ${providerName} with target ${key} and fee ${estimates[key]} to mergedEstimates`,
