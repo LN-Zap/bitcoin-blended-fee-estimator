@@ -59,6 +59,11 @@ export class DataProviderManager {
       );
     }
 
+    // If we don't have any estimates that are above the fee minimum, add a single estimate at the fee minimum.
+    if (Object.keys(feeEstimates).length === 0) {
+      feeEstimates["1"] = this.feeMinimum * 1000;
+    }
+
     data = {
       current_block_height: blockHeight,
       current_block_hash: blockHash,
