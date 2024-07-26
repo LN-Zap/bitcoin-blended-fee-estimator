@@ -36,7 +36,7 @@ const TIMEOUT = config.get<number>("settings.timeout");
 const FEE_MULTIPLIER = config.get<number>("settings.feeMultiplier");
 const FEE_MINIMUM = config.get<number>("settings.feeMinimum");
 const MAX_HEIGHT_DELTA = config.get<number>("settings.maxHeightDelta");
-const CACHE_STDTTL = config.get<number>("cache.stdTTL");
+const CACHE_STD_TTL = config.get<number>("cache.stdTTL");
 const CACHE_CHECKPERIOD = config.get<number>("cache.checkperiod");
 
 const log = logger(LOGLEVEL, "server");
@@ -51,7 +51,7 @@ log.info(config.util.toObject());
 // Register data provider service.
 const service = new DataProviderManager(
   {
-    stdTTL: CACHE_STDTTL,
+    stdTTL: CACHE_STD_TTL,
     checkperiod: CACHE_CHECKPERIOD,
   },
   MAX_HEIGHT_DELTA,
@@ -125,7 +125,7 @@ app.get("/", async (c) => {
   try {
     data = await service.getData();
     // Set cache headers.
-    c.res.headers.set("Cache-Control", `public, max-age=${CACHE_STDTTL}`);
+    c.res.headers.set("Cache-Control", `public, max-age=${CACHE_STD_TTL}`);
   } catch (error) {
     log.error(error);
     data = {
@@ -158,7 +158,7 @@ app.get("/v1/fee-estimates", async (c) => {
     data = await service.getData();
 
     // Set cache headers.
-    c.res.headers.set("Cache-Control", `public, max-age=${CACHE_STDTTL}`);
+    c.res.headers.set("Cache-Control", `public, max-age=${CACHE_STD_TTL}`);
 
     // Return the estimates.
     return c.json(data);
