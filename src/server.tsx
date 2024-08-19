@@ -42,7 +42,7 @@ const CACHE_CHECKPERIOD = config.get<number>("cache.checkperiod");
 const log = logger(LOGLEVEL, "server");
 
 const middlewareLogger = (message: string, ...rest: string[]) => {
-  log.info({ msg: message, ...rest });
+  log.info({ message, ...rest });
 };
 
 // Log the configuration values.
@@ -95,8 +95,10 @@ ESPLORA_FALLBACK_BASE_URL &&
 
 // Initialize the Express app.
 const app = new Hono();
-log.info({ msg: `Fee Estimates available at ${BASE_URL}/v1/fee-estimates` });
-log.info({ msg: `Website available at ${BASE_URL}` });
+log.info({
+  message: `Fee Estimates available at ${BASE_URL}/v1/fee-estimates`,
+});
+log.info({ message: `Website available at ${BASE_URL}` });
 
 // Add a health/ready endpoint.
 app.get("/health/ready", async (c) => {

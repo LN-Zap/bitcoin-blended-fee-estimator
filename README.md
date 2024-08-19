@@ -82,7 +82,7 @@ Here are the available configuration options:
 | `settings.feeMultiplier`  | The multiplier to apply to the fee estimates                                                              | `1`                     | `FEE_MULTIPLIER`     |
 | `settings.feeMinimum`     | The minimum fee (sat/vB) to use for fee estimates if we could not determine from a configured data source | `2`                     | `FEE_MINIMUM`        |
 | `settings.maxHeightDelta` | The maximum acceptable difference between the block heights of the most current fee estimates.            | `3`                     | `MAX_HEIGHT_DELTA`   |
-| `cache.stdTTL`            | The standard time to live in seconds for every generated cache element                                    | `15`                    | `CACHE_STD_TTL`       |
+| `cache.stdTTL`            | The standard time to live in seconds for every generated cache element                                    | `15`                    | `CACHE_STD_TTL`      |
 | `cache.checkperiod`       | The period in seconds, used for the automatic delete check interval                                       | `20`                    | `CACHE_CHECKPERIOD`  |
 
 ### Mempool settings

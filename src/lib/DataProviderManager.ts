@@ -104,9 +104,9 @@ export class DataProviderManager {
             feeEstimates,
           } as DataPoint;
         } catch (error) {
-          console.error(
-            `Error fetching data from provider ${p.constructor.name}: ${error}`,
-          );
+          log.error({
+            message: `Error fetching data from provider ${p.constructor.name}: ${error}`,
+          });
           return null;
         }
       }),
@@ -161,8 +161,8 @@ export class DataProviderManager {
         dataPoints[0].blockHeight - dp.blockHeight <= this.maxHeightDelta;
 
       if (!isRelevant) {
-        console.warn({
-          msg: `Data point from block ${dp.blockHeight} was filtered out due to relevancy threshold.`,
+        log.warn({
+          message: `Data point from block ${dp.blockHeight} was filtered out due to relevancy threshold.`,
         });
       }
 
@@ -181,7 +181,7 @@ export class DataProviderManager {
       Object.entries(feeEstimates).filter(([blockTarget, estimate]) => {
         if (estimate < this.feeMinimum) {
           log.warn({
-            msg: `Fee estimate for target ${blockTarget} was below the minimum of ${this.feeMinimum}.`,
+            message: `Fee estimate for target ${blockTarget} was below the minimum of ${this.feeMinimum}.`,
           });
           return false;
         }
@@ -206,7 +206,10 @@ export class DataProviderManager {
       const keys = Object.keys(estimates)
         .map(Number)
         .sort((a, b) => a - b);
-      log.debug({ msg: `Estimates for dataPoint ${providerName}`, estimates });
+      log.debug({
+        message: `Estimates for dataPoint ${providerName}`,
+        estimates,
+      });
 
       keys.forEach((key) => {
         // Only add the estimate if it has a higher confirmation target and a lower fee.
@@ -216,14 +219,14 @@ export class DataProviderManager {
             estimates[key] < Math.min(...Object.values(mergedEstimates)))
         ) {
           log.debug({
-            msg: `Adding estimate from ${providerName} with target ${key} and fee ${estimates[key]} to mergedEstimates`,
+            message: `Adding estimate from ${providerName} with target ${key} and fee ${estimates[key]} to mergedEstimates`,
           });
           mergedEstimates[key] = estimates[key];
         }
       });
     }
 
-    log.debug({ msg: "Final mergedEstimates:", mergedEstimates });
+    log.debug({ message: "Final mergedEstimates:", mergedEstimates });
     return mergedEstimates;
   }
 }

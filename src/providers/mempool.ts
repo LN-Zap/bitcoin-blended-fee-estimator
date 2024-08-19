@@ -122,7 +122,7 @@ export class MempoolProvider implements Provider {
         feeEstimates,
       };
     } catch (error) {
-      log.error({ msg: "Error fetching all data from Mempool:", error });
+      log.error({ message: "Error fetching all data from Mempool:", error });
       throw error;
     }
   }

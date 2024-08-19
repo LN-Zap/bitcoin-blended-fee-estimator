@@ -121,7 +121,7 @@ export class EsploraProvider implements Provider {
         feeEstimates,
       };
     } catch (error) {
-      log.error({ msg: "Error fetching all data from Esplora:", error });
+      log.error({ message: "Error fetching all data from Esplora:", error });
       throw error;
     }
   }
