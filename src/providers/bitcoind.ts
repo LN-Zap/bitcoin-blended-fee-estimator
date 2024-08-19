@@ -44,7 +44,7 @@ export class BitcoindProvider implements Provider {
     const getBlockCount = promisify(this.rpc.getBlockCount.bind(this.rpc));
 
     const response = await getBlockCount();
-    log.trace({ msg: "getBlockCount", response: response.result });
+    log.trace({ message: "getBlockCount", response: response.result });
 
     return response.result;
   }
@@ -60,7 +60,7 @@ export class BitcoindProvider implements Provider {
     );
 
     const response = await getBestBlockHash();
-    log.trace({ msg: "getBestBlockHash", response: response.result });
+    log.trace({ message: "getBestBlockHash", response: response.result });
 
     return response.result;
   }
@@ -76,7 +76,7 @@ export class BitcoindProvider implements Provider {
     );
 
     const response = await estimateSmartFee(target, this.mode);
-    log.trace({ msg: "estimateSmartFee", response: response.result });
+    log.trace({ message: "estimateSmartFee", response: response.result });
 
     return response.result?.feerate;
   }
@@ -116,14 +116,14 @@ export class BitcoindProvider implements Provider {
       } catch (error) {
         errorCount++;
         log.warn({
-          msg: `Error getting fee estimate for target ${target}:`,
+          message: `Error getting fee estimate for target ${target}:`,
           errors: responses[i].result?.errors.join(", "),
         });
       }
     });
 
     if (errorCount === this.targets.length) {
-      log.error({ msg: "Error getting fee estimates" });
+      log.error({ message: "Error getting fee estimates" });
       throw new Error("Error getting fee estimates");
     }
 

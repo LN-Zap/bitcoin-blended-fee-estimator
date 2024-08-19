@@ -63,7 +63,7 @@ export async function fetchData<T>(
       : response.text());
     return data as T;
   } catch (error) {
-    log.error({ msg: `Error fetching data from "${url}":`, error });
+    log.warn({ message: `Error fetching data from "${url}":`, error });
     throw error;
   }
 }
