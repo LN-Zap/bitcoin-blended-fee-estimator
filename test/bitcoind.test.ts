@@ -30,6 +30,10 @@ mockRpcClient.estimateSmartFee = (
   cb: (error: any, result: EstimateSmartFeeBatchResponse) => void,
 ) => cb(null, { result: { feerate: 1000 } });
 
+mockRpcClient.getMempoolInfo = (
+  cb: (error: any, result: MempoolInfoResponse) => void,
+) => cb(null, { result: { mempoolminfee: 0.00001234 } });
+
 const provider = new BitcoindProvider(
   "http://localhost:18445",
   "user",
@@ -56,6 +60,11 @@ test("getBlockHash", async () => {
 test("getFeeEstimate", async () => {
   const result = await provider.getFeeEstimate(2);
   expect(result).toEqual(1000);
+});
+
+test("getMinRelayFeeRate", async () => {
+  const result = await provider.getMinRelayFeeRate();
+  expect(result).toEqual(1.234);
 });
 
 // test("getFeeEstimates", async () => {
