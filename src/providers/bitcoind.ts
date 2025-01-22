@@ -131,18 +131,42 @@ export class BitcoindProvider implements Provider {
   }
 
   /**
+   * Fetches min fee rate from the Bitcoind server.
+   *
+   * @returns A promise that resolves to the fetched min fee rate.
+   */
+  async getMinRelayFeeRate(): Promise<number> {
+    const getMempoolInfo = promisify(
+      this.rpc.getMempoolInfo.bind(this.rpc),
+    );
+
+    const response = await getMempoolInfo();
+    log.trace({ message: "getMempoolInfo", response: response.result });
+
+    const feeRate = response.result?.mempoolminfee;
+    if (!feeRate) {
+      log.error({ message: "Error getting mempool min fee" });
+      throw new Error("Error getting mempool min fee");
+    }
+
+    // Convert the returned value to sats/vB, as it's currently returned in BTC/kB.
+    return parseFloat(((feeRate * 1e8) / 1000).toFixed(3));
+  }
+
+  /**
    * Fetches all data from the Bitcoind server.
    *
-   * This method fetches the current block height, block hash, and fee estimates from the Bitcoind server.
+   * This method fetches the current block height, block hash, fee estimates and minRelayFeeRate from the Bitcoind server.
    * It then returns an object containing this data.
    *
-   * @returns A promise that resolves to an object containing the block height, block hash, and fee estimates.
+   * @returns A promise that resolves to an object containing the block height, block hash, fee estimates and minRelayFeeRate.
    */
   async getAllData(): Promise<ProviderData> {
     const blockHeight = await this.getBlockHeight();
     const blockHash = await this.getBlockHash();
     const feeEstimates = await this.getFeeEstimates();
+    const minRelayFeeRate = await this.getMinRelayFeeRate();
 
-    return { blockHeight, blockHash, feeEstimates };
+    return { blockHeight, blockHash, feeEstimates, minRelayFeeRate };
   }
 }
