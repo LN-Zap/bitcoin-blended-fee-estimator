@@ -145,8 +145,8 @@ export class BitcoindProvider implements Provider {
 
     const feeRate = response.result?.mempoolminfee;
     if (!feeRate) {
-      log.error({ message: "Error getting mempool min fee" });
-      throw new Error("Error getting mempool min fee");
+      log.error({ message: "Error getting mempool min fee, mempoolminfee not found" });
+      throw new Error("Error getting mempool min fee, mempoolminfee not found");
     }
 
     // Convert the returned value to sats/vB, as it's currently returned in BTC/kB.
