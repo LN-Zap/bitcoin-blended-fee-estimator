@@ -11,11 +11,13 @@ test("should exclude estimates that are below the fee minimum", async () => {
     getBlockHeight = () => Promise.resolve(1001);
     getBlockHash = () => Promise.resolve("hash1001");
     getFeeEstimates = () => Promise.resolve(feeEstimates);
+    getMinRelayFeeRate = () => Promise.resolve(1);
     getAllData = () =>
       Promise.resolve({
         blockHeight: 1001,
         blockHash: "hash1001",
         feeEstimates,
+        minRelayFeeRate: 1,
       });
   }
 
@@ -35,6 +37,46 @@ test("should exclude estimates that are below the fee minimum", async () => {
     "1": 3000,
     "2": 2000,
   });
+  expect(mergedData.min_relay_feerate).toEqual(2000);
+});
+
+test("should exclude estimates that are below the minimum relay fee", async () => {
+  const feeEstimates = {
+    "1": 3,
+    "2": 2,
+    "3": 1,
+  };
+  class MockProvider implements Provider {
+    getBlockHeight = () => Promise.resolve(1001);
+    getBlockHash = () => Promise.resolve("hash1001");
+    getFeeEstimates = () => Promise.resolve(feeEstimates);
+    getMinRelayFeeRate = () => Promise.resolve(2);
+    getAllData = () =>
+      Promise.resolve({
+        blockHeight: 1001,
+        blockHash: "hash1001",
+        feeEstimates,
+        minRelayFeeRate: 1,
+      });
+  }
+
+  const maxHeightDelta = 1;
+  const feeMultiplier = 1;
+  const feeMinimum = 1;
+  const manager = new DataProviderManager(
+    { stdTTL: 0, checkperiod: 0 },
+    maxHeightDelta,
+    feeMultiplier,
+    feeMinimum,
+  );
+  manager.registerProvider(new MockProvider());
+
+  const mergedData = await manager.getData();
+  expect(mergedData.fee_by_block_target).toEqual({
+    "1": 3000,
+    "2": 2000,
+  });
+  expect(mergedData.min_relay_feerate).toEqual(2000);
 });
 
 test("should return single estimate at fee minimum if no valid estimates are available", async () => {
@@ -47,11 +89,13 @@ test("should return single estimate at fee minimum if no valid estimates are ava
     getBlockHeight = () => Promise.resolve(1001);
     getBlockHash = () => Promise.resolve("hash1001");
     getFeeEstimates = () => Promise.resolve(feeEstimates);
+    getMinRelayFeeRate = () => Promise.resolve(1);
     getAllData = () =>
       Promise.resolve({
         blockHeight: 1001,
         blockHash: "hash1001",
         feeEstimates,
+        minRelayFeeRate: 1,
       });
   }
 
@@ -70,4 +114,5 @@ test("should return single estimate at fee minimum if no valid estimates are ava
   expect(mergedData.fee_by_block_target).toEqual({
     "1": 2000,
   });
+  expect(mergedData.min_relay_feerate).toEqual(2000);
 });

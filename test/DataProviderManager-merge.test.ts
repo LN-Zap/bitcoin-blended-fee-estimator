@@ -4,6 +4,7 @@ import { DataProviderManager } from "../src/lib/DataProviderManager";
 class MockProvider0 implements Provider {
   getBlockHeight = () => Promise.resolve(1001);
   getBlockHash = () => Promise.resolve("hash1001");
+  getMinRelayFeeRate = () => Promise.resolve(1);
   getFeeEstimates = () =>
     Promise.resolve({
       "1": 1,
@@ -19,12 +20,14 @@ class MockProvider0 implements Provider {
         "2": 1,
         "3": 1,
       },
+      minRelayFeeRate: 1,
     });
 }
 
 class MockProvider1 implements Provider {
   getBlockHeight = () => Promise.resolve(998);
   getBlockHash = () => Promise.resolve("hash998");
+  getMinRelayFeeRate = () => Promise.resolve(1);
   getFeeEstimates = () =>
     Promise.resolve({
       "1": 20,
@@ -38,12 +41,14 @@ class MockProvider1 implements Provider {
         "1": 20,
         "10": 1,
       },
+      minRelayFeeRate: 1,
     });
 }
 
 class MockProvider2 implements Provider {
   getBlockHeight = () => Promise.resolve(1000);
   getBlockHash = () => Promise.resolve("hash1000");
+  getMinRelayFeeRate = () => Promise.resolve(1);
   getFeeEstimates = () =>
     Promise.resolve({
       "1": 30,
@@ -57,12 +62,14 @@ class MockProvider2 implements Provider {
         "1": 30,
         "2": 20,
       },
+      minRelayFeeRate: 1,
     });
 }
 
 class MockProvider3 implements Provider {
   getBlockHeight = () => Promise.resolve(999);
   getBlockHash = () => Promise.resolve("hash999");
+  getMinRelayFeeRate = () => Promise.resolve(1);
   getFeeEstimates = () =>
     Promise.resolve({
       "1": 25,
@@ -88,6 +95,7 @@ class MockProvider3 implements Provider {
         "8": 3.564999999999998,
         "9": 3.564999999999998,
       },
+      minRelayFeeRate: 1,
     });
 }
 
@@ -115,4 +123,5 @@ test("should merge fee estimates from multiple providers correctly", async () =>
     "3": 10000,
     "5": 7130,
   });
+  expect(mergedData.min_relay_feerate).toEqual(2000);
 });

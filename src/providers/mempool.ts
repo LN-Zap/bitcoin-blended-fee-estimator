@@ -104,22 +104,43 @@ export class MempoolProvider implements Provider {
   }
 
   /**
+   * Fetches min fee rate from the Mempool API.
+   *
+   * @returns A promise that resolves to the fetched min fee rate.
+   */
+  async getMinRelayFeeRate(): Promise<number> {
+    const data = await fetchData<MempoolFeeEstimates>(
+      `${this.url}/api/v1/fees/recommended`,
+      "json",
+      this.timeout,
+    );
+
+    if (!data.minimumFee) {
+      throw new Error("Invalid fee data");
+    }
+
+    return data.minimumFee;
+  }
+
+  /**
    * Fetches all data (block height, block hash, and fee estimates) from the Mempool API.
    *
    * @returns A promise that resolves to an object of all data.
    */
   public async getAllData(): Promise<ProviderData> {
     try {
-      const [blockHeight, blockHash, feeEstimates] = await Promise.all([
+      const [blockHeight, blockHash, feeEstimates, minRelayFeeRate] = await Promise.all([
         this.getBlockHeight(),
         this.getBlockHash(),
         this.getFeeEstimates(),
+        this.getMinRelayFeeRate(),
       ]);
 
       return {
         blockHeight,
         blockHash,
         feeEstimates,
+        minRelayFeeRate,
       };
     } catch (error) {
       log.error({ message: "Error fetching all data from Mempool:", error });

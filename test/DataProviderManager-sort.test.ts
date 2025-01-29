@@ -7,11 +7,13 @@ class MockProvider1 implements Provider {
   getBlockHeight = () => Promise.resolve(998);
   getBlockHash = () => Promise.resolve("hash1");
   getFeeEstimates = () => Promise.resolve({});
+  getMinRelayFeeRate = () => Promise.resolve(0);
   getAllData = () =>
     Promise.resolve({
       blockHeight: 998,
       blockHash: "hash1",
       feeEstimates: {},
+      minRelayFeeRate: 0,
     });
 }
 
@@ -19,11 +21,13 @@ class MockProvider2 implements Provider {
   getBlockHeight = () => Promise.resolve(1000);
   getBlockHash = () => Promise.resolve("hash3");
   getFeeEstimates = () => Promise.resolve({});
+  getMinRelayFeeRate = () => Promise.resolve(0);
   getAllData = () =>
     Promise.resolve({
       blockHeight: 1000,
       blockHash: "hash3",
       feeEstimates: {},
+      minRelayFeeRate: 0,
     });
 }
 
@@ -31,11 +35,13 @@ class MockProvider3 implements Provider {
   getBlockHeight = () => Promise.resolve(999);
   getBlockHash = () => Promise.resolve("hash2");
   getFeeEstimates = () => Promise.resolve({});
+  getMinRelayFeeRate = () => Promise.resolve(0);
   getAllData = () =>
     Promise.resolve({
       blockHeight: 999,
       blockHash: "hash2",
       feeEstimates: {},
+      minRelayFeeRate: 0,
     });
 }
 

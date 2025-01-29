@@ -103,22 +103,42 @@ export class EsploraProvider implements Provider {
   }
 
   /**
-   * Fetches all data (block height, block hash, and fee estimates) from the Esplora API.
+   * Fetches min fee rate from the Esplora API.
+   *
+   * @returns A promise that resolves to the fetched min fee rate.
+   */
+  async getMinRelayFeeRate(): Promise<number> {
+    const data = await fetchData<EsploraFeeEstimates>(
+      `${this.url}/api/fee-estimates`,
+      "json",
+      this.timeout,
+    );
+
+    const feeRates = Object.values(data);
+    // Currently the Esplora API does not provide a minimum relay fee rate
+    // so we return the minimum fee rate from the fee estimates
+    return Math.min(...feeRates);
+  }
+
+  /**
+   * Fetches all data (block height, block hash, fee estimates and minFeeRelayFeeRate) from the Esplora API.
    *
    * @returns A promise that resolves to an object of all data.
    */
   public async getAllData(): Promise<ProviderData> {
     try {
-      const [blockHeight, blockHash, feeEstimates] = await Promise.all([
+      const [blockHeight, blockHash, feeEstimates, minRelayFeeRate] = await Promise.all([
         this.getBlockHeight(),
         this.getBlockHash(),
         this.getFeeEstimates(),
+        this.getMinRelayFeeRate(),
       ]);
 
       return {
         blockHeight,
         blockHash,
         feeEstimates,
+        minRelayFeeRate,
       };
     } catch (error) {
       log.error({ message: "Error fetching all data from Esplora:", error });

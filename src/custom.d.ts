@@ -2,6 +2,7 @@ interface Provider {
   getBlockHeight(): Promise<number>;
   getBlockHash(): Promise<string>;
   getFeeEstimates(): Promise<FeeByBlockTarget>;
+  getMinRelayFeeRate(): Promise<number>;
   getAllData(): Promise<ProviderData>;
 }
 
@@ -10,6 +11,7 @@ type DataPoint = {
   blockHeight: number;
   blockHash: string;
   feeEstimates: FeeByBlockTarget;
+  minRelayFeeRate: number;
 };
 
 // CacheConfig represents the configuration for the cache.
@@ -65,10 +67,19 @@ interface BestBlockHashResponse {
   result: string;
 }
 
+interface MempoolInfoResponse {
+  result: MempoolInfo;
+}
+
+interface MempoolInfo {
+  mempoolminfee: number;
+}
+
 type ProviderData = {
   blockHeight: number;
   blockHash: string;
   feeEstimates: FeeByBlockTarget;
+  minRelayFeeRate: number;
 };
 
 // Estimates represents the current block hash and fee by block target.
@@ -76,6 +87,7 @@ type Estimates = {
   current_block_hash: string | null; // current block hash
   current_block_height: number | null; // current block height
   fee_by_block_target: FeeByBlockTarget; // fee by block target (in sat/kb)
+  min_relay_feerate: number | null; // minimum relay fee rate (in sat/kb)
 };
 
 // SiteData represents the data of a site.

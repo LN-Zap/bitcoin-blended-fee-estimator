@@ -50,7 +50,9 @@ export class DataProviderManager {
     const dataPoints = await this.getRelevantDataPoints();
     const blockHeight = dataPoints[0].blockHeight;
     const blockHash = dataPoints[0].blockHash;
-    const feeEstimates = this.mergeFeeEstimates(dataPoints);
+
+    let minRelayFeerate = this.getHighestMinRelayFeeRate(dataPoints);
+    let feeEstimates = this.mergeFeeEstimates(dataPoints, minRelayFeerate);
 
     // Apply the fee formatter and multiplier.
     for (let [blockTarget, estimate] of Object.entries(feeEstimates)) {
@@ -58,16 +60,22 @@ export class DataProviderManager {
         (estimate *= 1000 * this.feeMultiplier),
       );
     }
+    minRelayFeerate *= 1000 * this.feeMultiplier;
+    const minConfiguredFeeRate = this.feeMinimum * 1000;
 
-    // If we don't have any estimates that are above the fee minimum, add a single estimate at the fee minimum.
+    // If we don't have any estimates that are above the fee minimums, add a single estimate at the minimum required fee.
     if (Object.keys(feeEstimates).length === 0) {
-      feeEstimates["1"] = this.feeMinimum * 1000;
+      feeEstimates["1"] = Math.max(minConfiguredFeeRate, minRelayFeerate);
     }
+
+    // Ensure the minRelayFeerate is at least the fee minimum.
+    minRelayFeerate = Math.max(minRelayFeerate, minConfiguredFeeRate);
 
     data = {
       current_block_height: blockHeight,
       current_block_hash: blockHash,
       fee_by_block_target: feeEstimates,
+      min_relay_feerate: minRelayFeerate,
     };
 
     this.cache.set(this.cacheKey, data);
@@ -88,6 +96,7 @@ export class DataProviderManager {
           const blockHeight = await p.getBlockHeight();
           const blockHash = await p.getBlockHash();
           let feeEstimates = await p.getFeeEstimates();
+          const minRelayFeeRate = await p.getMinRelayFeeRate();
 
           // Parse and round the fee estimates to 3 decimal places
           feeEstimates = Object.fromEntries(
@@ -102,6 +111,7 @@ export class DataProviderManager {
             blockHeight,
             blockHash,
             feeEstimates,
+            minRelayFeeRate,
           } as DataPoint;
         } catch (error) {
           log.error({
@@ -123,6 +133,8 @@ export class DataProviderManager {
    */
   public async getSortedDataPoints(): Promise<DataPoint[]> {
     const dataPoints = await this.fetchDataPoints();
+    log.info({ message: "Fetched data points", dataPoints });
+
     dataPoints.sort((a, b) => {
       // Prioritize mempool-based estimates
       if (
@@ -171,23 +183,43 @@ export class DataProviderManager {
   }
 
   /**
-   * Filters fee estimates based on the fee minimum.
+   * Filters fee estimates based on the fee minimum and the minRelayFeeRate.
    *
    * @param feeEstimates - An object containing fee estimates.
+   * @param minRelayFeeRate - The minimum relay fee rate.
+   * @param minConfiguredFeeRate - The configured minimum fee rate.
    * @returns An object containing the filtered fee estimates.
    */
-  private filterEstimates(feeEstimates: FeeByBlockTarget): FeeByBlockTarget {
+  private filterEstimates(feeEstimates: FeeByBlockTarget, minRelayFeeRate: number, minConfiguredFeeRate: number): FeeByBlockTarget {
     return Object.fromEntries(
       Object.entries(feeEstimates).filter(([blockTarget, estimate]) => {
-        if (estimate < this.feeMinimum) {
+        if (estimate < minConfiguredFeeRate) {
           log.warn({
-            message: `Fee estimate for target ${blockTarget} was below the minimum of ${this.feeMinimum}.`,
+            message: `Fee estimate for target ${blockTarget} was below the minimum of ${minConfiguredFeeRate}.`,
           });
           return false;
         }
+
+        if (estimate < minRelayFeeRate) {
+          log.warn({
+            message: `Fee estimate for target ${blockTarget} was below the minRelayFeeRate of ${minRelayFeeRate}.`,
+          });
+          return false;
+        }
+
         return true;
       }),
     );
+  }
+
+  /**
+   * Selects the highest min relay fee rate from multiple data points.
+   *
+   * @param dataPoints - An array of data points from which to select from.
+   * @returns An number representing the highest min relay fee found.
+   */
+  private getHighestMinRelayFeeRate(dataPoints: DataPoint[]): number {
+    return Math.max(...dataPoints.map(point => point.minRelayFeeRate));
   }
 
   /**
@@ -196,20 +228,16 @@ export class DataProviderManager {
    * @param dataPoints - An array of data points from which to merge fee estimates.
    * @returns An object containing the merged fee estimates.
    */
-  private mergeFeeEstimates(dataPoints: DataPoint[]): FeeByBlockTarget {
+  private mergeFeeEstimates(dataPoints: DataPoint[], minRelayFeeRate: number): FeeByBlockTarget {
     let mergedEstimates: FeeByBlockTarget = {};
 
     // Iterate over all data points
     for (const dataPoint of dataPoints) {
-      const estimates = this.filterEstimates(dataPoint.feeEstimates);
+      const estimates = this.filterEstimates(dataPoint.feeEstimates, minRelayFeeRate, this.feeMinimum);
       const providerName = dataPoint.provider.constructor.name;
       const keys = Object.keys(estimates)
         .map(Number)
         .sort((a, b) => a - b);
-      log.debug({
-        message: `Estimates for dataPoint ${providerName}`,
-        estimates,
-      });
 
       keys.forEach((key) => {
         // Only add the estimate if it has a higher confirmation target and a lower fee.
