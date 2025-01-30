@@ -30,8 +30,8 @@ mockRpcClient.estimateSmartFee = (
   cb: (error: any, result: EstimateSmartFeeBatchResponse) => void,
 ) => cb(null, { result: { feerate: 1000 } });
 
-mockRpcClient.getMempoolInfo = (
-  cb: (error: any, result: MempoolInfoResponse) => void,
+mockRpcClient.getMemPoolInfo = (
+  cb: (error: any, result: MemPoolInfoResponse) => void,
 ) => cb(null, { result: { mempoolminfee: 0.00001234 } });
 
 const provider = new BitcoindProvider(
