@@ -67,11 +67,11 @@ interface BestBlockHashResponse {
   result: string;
 }
 
-interface MempoolInfoResponse {
-  result: MempoolInfo;
+interface MemPoolInfoResponse {
+  result: MemPoolInfo;
 }
 
-interface MempoolInfo {
+interface MemPoolInfo {
   mempoolminfee: number;
 }
 
