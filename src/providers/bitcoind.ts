@@ -136,12 +136,12 @@ export class BitcoindProvider implements Provider {
    * @returns A promise that resolves to the fetched min fee rate.
    */
   async getMinRelayFeeRate(): Promise<number> {
-    const getMempoolInfo = promisify(
-      this.rpc.getMempoolInfo.bind(this.rpc),
+    const getMemPoolInfo = promisify(
+      this.rpc.getMemPoolInfo.bind(this.rpc),
     );
 
-    const response = await getMempoolInfo();
-    log.trace({ message: "getMempoolInfo", response: response.result });
+    const response = await getMemPoolInfo();
+    log.trace({ message: "getMemPoolInfo", response: response.result });
 
     const feeRate = response.result?.mempoolminfee;
     if (!feeRate) {
