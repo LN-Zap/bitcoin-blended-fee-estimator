@@ -6,29 +6,18 @@ on:
 
 jobs:
   publish:
-    runs-on: "ubuntu-latest"
-
-    env:
-      DOCKERHUB_IMAGE: lnzap/bitcoin-blended-fee-estimator
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4
-
-      - name: Set version
-        run: echo "VERSION=$(echo ${{ github.ref }} | awk -F 'v' '{print $2}')" >> $GITHUB_ENV
-
-      - name: Dockerhub login
-        run: "docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }}"
-
-      - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # pin@v3
-      - uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # pin@v3
-      - uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # pin@v5
-        with:
-          push: true
-          tags: |
-            ${{ env.DOCKERHUB_IMAGE }}:latest
-            ${{ env.DOCKERHUB_IMAGE }}:${{ env.VERSION }}
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+    # Dual-publish to Docker Hub (public) and GAR (internal) via the shared reusable
+    # pipeline. GAR push is keyless WIF/OIDC, which works from this public repo where
+    # org secrets are unavailable — replacing the old flip-private-per-release workaround.
+    # See LN-Zap/zap-infrastructure#1402.
+    permissions:
+      id-token: write # WIF / OIDC for GAR
+      contents: read
+    uses: LN-Zap/zap-github-actions/.github/workflows/build-push-gar.yml@a7bebd44777efa7ae1fbaabcf232ed078067256d
+    with:
+      image-name: bitcoin-blended-fee-estimator
+      dockerhub-image: lnzap/bitcoin-blended-fee-estimator
+      platforms: linux/amd64,linux/arm64
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
