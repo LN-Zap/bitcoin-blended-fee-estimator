@@ -6,18 +6,47 @@ on:
 
 jobs:
   publish:
-    # Dual-publish to Docker Hub (public) and GAR (internal) via the shared reusable
-    # pipeline. GAR push is keyless WIF/OIDC, which works from this public repo where
-    # org secrets are unavailable — replacing the old flip-private-per-release workaround.
-    # See LN-Zap/zap-infrastructure#1402.
+    # Publishes directly: the reusable workflow this previously delegated to is not resolvable
+    # from a public repository, so the call failed before any job was created. Mirrors the Main
+    # workflow, which does resolve.
+    runs-on: "ubuntu-latest"
+
     permissions:
-      id-token: write # WIF / OIDC for GAR
       contents: read
-    uses: LN-Zap/zap-github-actions/.github/workflows/build-push-gar.yml@a7bebd44777efa7ae1fbaabcf232ed078067256d
-    with:
-      image-name: bitcoin-blended-fee-estimator
-      dockerhub-image: lnzap/bitcoin-blended-fee-estimator
-      platforms: linux/amd64,linux/arm64
-    secrets:
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+    env:
+      DOCKERHUB_IMAGE: lnzap/bitcoin-blended-fee-estimator
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # pin@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.3.9
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run tests
+        run: bun test
+
+      # Release tags carry a leading v; the published image tags never have.
+      - name: Resolve image version
+        id: version
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Dockerhub login
+        run: "docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }}"
+
+      - uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # pin@v3
+      - uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # pin@v3
+      - uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # pin@v5
+        with:
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_IMAGE }}:${{ steps.version.outputs.value }}
+            ${{ env.DOCKERHUB_IMAGE }}:latest
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
