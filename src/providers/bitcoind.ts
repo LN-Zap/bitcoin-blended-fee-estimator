@@ -1,7 +1,7 @@
 import RpcClient from "bitcoind-rpc";
 import { LOGLEVEL } from "../lib/util";
 import { logger } from "../lib/logger";
-import { promisify } from "util";
+import { inspect, promisify } from "util";
 
 const log = logger(LOGLEVEL, "bitcoind");
 
@@ -33,6 +33,22 @@ export class BitcoindProvider implements Provider {
     this.rpc = new RpcClient({ protocol, host, port, user, pass });
     this.targets = targets;
     this.mode = mode;
+  }
+
+  /**
+   * Returns a representation without the RPC client, which holds connection credentials,
+   * so the provider can be logged or serialized safely.
+   */
+  toJSON() {
+    return {
+      provider: this.constructor.name,
+      targets: this.targets,
+      mode: this.mode,
+    };
+  }
+
+  [inspect.custom]() {
+    return this.toJSON();
   }
 
   /**

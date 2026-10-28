@@ -22,7 +22,7 @@ export function logger(loglevel: string, scope?: string | undefined): Logger {
         return { level: label };
       },
     },
-    redact: ["bitcoind.password"],
+    redact: ["bitcoind.username", "bitcoind.password"],
   };
   if (process.env.NODE_ENV === "production") {
     log = pino(pinoOptions);
