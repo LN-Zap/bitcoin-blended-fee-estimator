@@ -60,13 +60,10 @@ export class DataProviderManager {
 
     // Apply the fee formatter and multiplier.
     for (let [blockTarget, estimate] of Object.entries(feeEstimates)) {
-      feeEstimates[blockTarget] = Math.ceil(
-        (estimate *= 1000 * this.feeMultiplier),
-      );
+      feeEstimates[blockTarget] = this.toSatPerKvB(estimate);
     }
-    // Round up so the value is an integer and never drops below the relay floor.
-    minRelayFeerate = Math.ceil(minRelayFeerate * 1000 * this.feeMultiplier);
-    const minConfiguredFeeRate = Math.ceil(this.feeMinimum * 1000);
+    minRelayFeerate = this.toSatPerKvB(minRelayFeerate);
+    const minConfiguredFeeRate = this.toSatPerKvB(this.feeMinimum, 1);
 
     // If we don't have any estimates that are above the fee minimums, add a single estimate at the minimum required fee.
     if (Object.keys(feeEstimates).length === 0) {
@@ -94,6 +91,14 @@ export class DataProviderManager {
    *
    * @returns A promise that resolves to an array of fetched data points.
    */
+  /**
+   * Converts a sat/vB rate to an integer sat/kvB rate, rounded up so it never drops below the input.
+   * Rounding to 3 decimals first stops floating-point error (2.007 * 1000 = 2007.0000000000002) from adding 1.
+   */
+  private toSatPerKvB(satPerVb: number, multiplier = this.feeMultiplier): number {
+    return Math.ceil(Number((satPerVb * 1000 * multiplier).toFixed(3)));
+  }
+
   private async fetchDataPoints(): Promise<DataPoint[]> {
     const dataPoints = await Promise.all(
       this.providers.map(async (p) => {

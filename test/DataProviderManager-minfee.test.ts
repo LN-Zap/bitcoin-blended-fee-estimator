@@ -188,3 +188,25 @@ test("should return an integer fallback estimate at a fractional min relay fee r
   expect(mergedData.min_relay_feerate).toEqual(1013);
   expectIntegerValues(mergedData);
 });
+
+test("should not round up past a value that floating-point error inflates", async () => {
+  // 2.007 * 1000 is 2007.0000000000002 in floating point.
+  const manager = createManager({ "1": 3, "2": 2.007 }, 2.007, 1, 1);
+
+  const mergedData = await manager.getData();
+  expect(mergedData.min_relay_feerate).toEqual(2007);
+  expect(mergedData.fee_by_block_target["2"]).toEqual(2007);
+  expectIntegerValues(mergedData);
+});
+
+test("should not return an estimate below the min relay fee rate it equals", async () => {
+  // With a 1.1 multiplier, scaling an estimate and the min relay fee rate in a different order put them 1 sat/kvB apart.
+  for (const rate of [1.29, 1.3, 1.33, 1.36]) {
+    const manager = createManager({ "1": rate }, rate, 1.1, 1);
+
+    const mergedData = await manager.getData();
+    expect(mergedData.fee_by_block_target["1"]).toEqual(
+      mergedData.min_relay_feerate,
+    );
+  }
+});

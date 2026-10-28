@@ -36,15 +36,30 @@ function createRecordingLogger() {
   return { log, calls };
 }
 
-function serialize(value: unknown): string {
-  const seen = new WeakSet<object>();
-  return JSON.stringify(value, (_key, v) => {
-    if (typeof v === "object" && v !== null) {
-      if (seen.has(v)) return undefined;
-      seen.add(v);
-    }
-    return v;
-  });
+// Walks a logged value structurally, without JSON.stringify, so a provider's toJSON cannot hide what was passed to the logger.
+function findLeak(
+  value: unknown,
+  provider: object,
+  seen = new WeakSet<object>(),
+): string | null {
+  if (value === provider) return "provider object";
+  if (typeof value === "string") {
+    return value.includes(RPC_USER) || value.includes(RPC_PASS)
+      ? "credential string"
+      : null;
+  }
+  if (typeof value !== "object" || value === null || seen.has(value))
+    return null;
+  seen.add(value);
+  for (const key of Reflect.ownKeys(value)) {
+    const leak = findLeak(
+      (value as Record<PropertyKey, unknown>)[key],
+      provider,
+      seen,
+    );
+    if (leak) return leak;
+  }
+  return null;
 }
 
 test("should not log provider objects or their connection settings", async () => {
@@ -63,14 +78,7 @@ test("should not log provider objects or their connection settings", async () =>
 
   expect(calls.length).toBeGreaterThan(0);
   for (const args of calls) {
-    const payload = serialize(args);
-    expect(payload).not.toContain(RPC_USER);
-    expect(payload).not.toContain(RPC_PASS);
-    for (const arg of args) {
-      expect(
-        JSON.stringify(arg, (_k, v) => (v === provider ? "<provider>" : v)),
-      ).not.toContain("<provider>");
-    }
+    expect(findLeak(args, provider)).toBeNull();
   }
 });
 
