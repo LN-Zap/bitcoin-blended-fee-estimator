@@ -1,9 +1,10 @@
 import NodeCache from "node-cache";
+import type { Logger } from "pino";
 import { LOGLEVEL } from "./util";
 import { logger } from "./logger";
 import { MempoolProvider } from "../providers/mempool";
 
-const log = logger(LOGLEVEL, "data-provider-manager");
+const defaultLog = logger(LOGLEVEL, "data-provider-manager");
 
 export class DataProviderManager {
   private providers: Provider[] = [];
@@ -12,17 +13,20 @@ export class DataProviderManager {
   private feeMultiplier: number;
   private feeMinimum: number;
   private cacheKey: string = "data";
+  private log: Logger;
 
   constructor(
     cacheConfig: CacheConfig = { stdTTL: 0, checkperiod: 0 },
     maxHeightDelta: number = 1,
     feeMultiplier: number = 1,
     feeMinimum: number = 1,
+    log: Logger = defaultLog,
   ) {
     this.cache = new NodeCache(cacheConfig);
     this.maxHeightDelta = maxHeightDelta;
     this.feeMultiplier = feeMultiplier;
     this.feeMinimum = feeMinimum;
+    this.log = log;
   }
 
   /**
@@ -43,7 +47,7 @@ export class DataProviderManager {
     let data = this.cache.get<Estimates>("data");
 
     if (data) {
-      log.info({ message: "Got data from cache", data });
+      this.log.info({ message: "Got data from cache", data });
       return data;
     }
 
@@ -56,12 +60,10 @@ export class DataProviderManager {
 
     // Apply the fee formatter and multiplier.
     for (let [blockTarget, estimate] of Object.entries(feeEstimates)) {
-      feeEstimates[blockTarget] = Math.ceil(
-        (estimate *= 1000 * this.feeMultiplier),
-      );
+      feeEstimates[blockTarget] = this.toSatPerKvB(estimate);
     }
-    minRelayFeerate *= 1000 * this.feeMultiplier;
-    const minConfiguredFeeRate = this.feeMinimum * 1000;
+    minRelayFeerate = this.toSatPerKvB(minRelayFeerate);
+    const minConfiguredFeeRate = this.toSatPerKvB(this.feeMinimum, 1);
 
     // If we don't have any estimates that are above the fee minimums, add a single estimate at the minimum required fee.
     if (Object.keys(feeEstimates).length === 0) {
@@ -79,7 +81,7 @@ export class DataProviderManager {
     };
 
     this.cache.set(this.cacheKey, data);
-    log.info({ message: "Got data", data });
+    this.log.info({ message: "Got data", data });
 
     return data;
   }
@@ -89,6 +91,14 @@ export class DataProviderManager {
    *
    * @returns A promise that resolves to an array of fetched data points.
    */
+  /**
+   * Converts a sat/vB rate to an integer sat/kvB rate, rounded up so it never drops below the input.
+   * Rounding to 3 decimals first stops floating-point error (2.007 * 1000 = 2007.0000000000002) from adding 1.
+   */
+  private toSatPerKvB(satPerVb: number, multiplier = this.feeMultiplier): number {
+    return Math.ceil(Number((satPerVb * 1000 * multiplier).toFixed(3)));
+  }
+
   private async fetchDataPoints(): Promise<DataPoint[]> {
     const dataPoints = await Promise.all(
       this.providers.map(async (p) => {
@@ -114,7 +124,7 @@ export class DataProviderManager {
             minRelayFeeRate,
           } as DataPoint;
         } catch (error) {
-          log.error({
+          this.log.error({
             message: `Error fetching data from provider ${p.constructor.name}: ${error}`,
           });
           return null;
@@ -133,7 +143,10 @@ export class DataProviderManager {
    */
   public async getSortedDataPoints(): Promise<DataPoint[]> {
     const dataPoints = await this.fetchDataPoints();
-    log.info({ message: "Fetched data points", dataPoints });
+    this.log.info({
+      message: "Fetched data points",
+      dataPoints: dataPoints.map((dp) => this.summarizeDataPoint(dp)),
+    });
 
     dataPoints.sort((a, b) => {
       // Prioritize mempool-based estimates
@@ -159,6 +172,23 @@ export class DataProviderManager {
   }
 
   /**
+   * Builds a log-safe summary of a data point. The provider object itself is
+   * never included, only its name.
+   *
+   * @param dataPoint - The data point to summarize.
+   * @returns An object containing only the fields that are safe to log.
+   */
+  private summarizeDataPoint(dataPoint: DataPoint) {
+    return {
+      provider: dataPoint.provider.constructor.name,
+      blockHeight: dataPoint.blockHeight,
+      blockHash: dataPoint.blockHash,
+      feeEstimateCount: Object.keys(dataPoint.feeEstimates).length,
+      minRelayFeeRate: dataPoint.minRelayFeeRate,
+    };
+  }
+
+  /**
    * Gets relevant data points based on the height difference threshold.
    *
    * @returns A promise that resolves to an array of relevant data points.
@@ -173,7 +203,7 @@ export class DataProviderManager {
         dataPoints[0].blockHeight - dp.blockHeight <= this.maxHeightDelta;
 
       if (!isRelevant) {
-        log.warn({
+        this.log.warn({
           message: `Data point from block ${dp.blockHeight} was filtered out due to relevancy threshold.`,
         });
       }
@@ -194,14 +224,14 @@ export class DataProviderManager {
     return Object.fromEntries(
       Object.entries(feeEstimates).filter(([blockTarget, estimate]) => {
         if (estimate < minConfiguredFeeRate) {
-          log.warn({
+          this.log.warn({
             message: `Fee estimate for target ${blockTarget} was below the minimum of ${minConfiguredFeeRate}.`,
           });
           return false;
         }
 
         if (estimate < minRelayFeeRate) {
-          log.warn({
+          this.log.warn({
             message: `Fee estimate for target ${blockTarget} was below the minRelayFeeRate of ${minRelayFeeRate}.`,
           });
           return false;
@@ -246,7 +276,7 @@ export class DataProviderManager {
           (key > Math.max(...Object.keys(mergedEstimates).map(Number)) &&
             estimates[key] < Math.min(...Object.values(mergedEstimates)))
         ) {
-          log.debug({
+          this.log.debug({
             message: `Adding estimate from ${providerName} with target ${key} and fee ${estimates[key]} to mergedEstimates`,
           });
           mergedEstimates[key] = estimates[key];
@@ -254,7 +284,7 @@ export class DataProviderManager {
       });
     }
 
-    log.debug({ message: "Final mergedEstimates:", mergedEstimates });
+    this.log.debug({ message: "Final mergedEstimates:", mergedEstimates });
     return mergedEstimates;
   }
 }
