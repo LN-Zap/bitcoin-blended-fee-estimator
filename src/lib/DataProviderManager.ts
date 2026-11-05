@@ -1,6 +1,6 @@
 import NodeCache from "node-cache";
 import type { Logger } from "pino";
-import { LOGLEVEL } from "./util";
+import { LOGLEVEL, isFiniteNumber } from "./util";
 import { logger } from "./logger";
 import { MempoolProvider } from "../providers/mempool";
 
@@ -52,6 +52,10 @@ export class DataProviderManager {
     }
 
     const dataPoints = await this.getRelevantDataPoints();
+    if (dataPoints.length === 0) {
+      throw new Error("No data available from any provider");
+    }
+
     const blockHeight = dataPoints[0].blockHeight;
     const blockHash = dataPoints[0].blockHash;
 
@@ -80,10 +84,27 @@ export class DataProviderManager {
       min_relay_feerate: minRelayFeerate,
     };
 
+    this.assertFiniteEstimates(data);
+
     this.cache.set(this.cacheKey, data);
     this.log.info({ message: "Got data", data });
 
     return data;
+  }
+
+  /**
+   * Throws if any fee estimate or the min relay fee rate is not a finite number, so a bad value is never served or cached.
+   *
+   * @param data - The estimates about to be returned.
+   */
+  private assertFiniteEstimates(data: Estimates): void {
+    const values = [
+      ...Object.values(data.fee_by_block_target),
+      data.min_relay_feerate,
+    ];
+    if (!values.every(isFiniteNumber)) {
+      throw new Error("Fee estimates contain a non-finite value");
+    }
   }
 
   /**
@@ -108,7 +129,19 @@ export class DataProviderManager {
           let feeEstimates = await p.getFeeEstimates();
           const minRelayFeeRate = await p.getMinRelayFeeRate();
 
-          // Parse and round the fee estimates to 3 decimal places
+          // Check the raw values first: rounding coerces numeric strings and null to numbers.
+          if (
+            !isFiniteNumber(minRelayFeeRate) ||
+            Object.keys(feeEstimates).length === 0 ||
+            !Object.values(feeEstimates).every(isFiniteNumber)
+          ) {
+            this.log.error({
+              message: `Discarding data from provider ${p.constructor.name}: empty or non-finite fee value`,
+            });
+            return null;
+          }
+
+          // Round the fee estimates to 3 decimal places
           feeEstimates = Object.fromEntries(
             Object.entries(feeEstimates).map(([key, value]) => [
               key,
