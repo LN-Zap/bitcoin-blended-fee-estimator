@@ -7,6 +7,7 @@ import config from "config";
 
 import { logger } from "./lib/logger";
 import { DataProviderManager } from "./lib/DataProviderManager";
+import { parseFiniteNumberSetting } from "./lib/util";
 import { MempoolProvider } from "./providers/mempool";
 import { EsploraProvider } from "./providers/esplora";
 import { BitcoindProvider } from "./providers/bitcoind";
@@ -33,8 +34,17 @@ const BITCOIND_ESTIMATE_MODE = config.get<EstimateMode>(
 
 const LOGLEVEL = config.get<string>("settings.loglevel");
 const TIMEOUT = config.get<number>("settings.timeout");
-const FEE_MULTIPLIER = config.get<number>("settings.feeMultiplier");
-const FEE_MINIMUM = config.get<number>("settings.feeMinimum");
+// Env-provided values arrive as strings; fail fast at startup rather than 500 on every request.
+const FEE_MULTIPLIER = parseFiniteNumberSetting(
+  "settings.feeMultiplier",
+  config.get<unknown>("settings.feeMultiplier"),
+  { greaterThan: 0 },
+);
+const FEE_MINIMUM = parseFiniteNumberSetting(
+  "settings.feeMinimum",
+  config.get<unknown>("settings.feeMinimum"),
+  { atLeast: 0 },
+);
 const MAX_HEIGHT_DELTA = config.get<number>("settings.maxHeightDelta");
 const CACHE_STD_TTL = config.get<number>("cache.stdTTL");
 const CACHE_CHECKPERIOD = config.get<number>("cache.checkperiod");

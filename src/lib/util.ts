@@ -67,3 +67,48 @@ export async function fetchData<T>(
     throw error;
   }
 }
+
+/**
+ * Type guard for a real, finite number. Rejects numeric strings, null, NaN and Infinity.
+ *
+ * @param value - The value to check.
+ */
+export function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+/**
+ * Parses a numeric configuration value, failing fast on anything that is not a finite number.
+ * Environment variables reach the config layer as strings, so numeric strings such as "1.5" are accepted.
+ *
+ * @param name - The setting name, used in the error message.
+ * @param value - The raw configuration value.
+ * @param bounds - Optional lower bound: `atLeast` (inclusive) or `greaterThan` (exclusive).
+ * @returns The value as a finite number.
+ *
+ * @throws Will throw an error if the value is not a finite number or a numeric string, or is out of bounds.
+ */
+export function parseFiniteNumberSetting(
+  name: string,
+  value: unknown,
+  bounds: { atLeast?: number; greaterThan?: number } = {},
+): number {
+  const parsed =
+    typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+  if (!isFiniteNumber(parsed)) {
+    throw new Error(
+      `Invalid configuration: ${name} must be a finite number, got ${JSON.stringify(value)}`,
+    );
+  }
+  if (bounds.atLeast !== undefined && parsed < bounds.atLeast) {
+    throw new Error(
+      `Invalid configuration: ${name} must be at least ${bounds.atLeast}, got ${JSON.stringify(value)}`,
+    );
+  }
+  if (bounds.greaterThan !== undefined && parsed <= bounds.greaterThan) {
+    throw new Error(
+      `Invalid configuration: ${name} must be greater than ${bounds.greaterThan}, got ${JSON.stringify(value)}`,
+    );
+  }
+  return parsed;
+}

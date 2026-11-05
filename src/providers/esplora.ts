@@ -1,4 +1,4 @@
-import { fetchData, LOGLEVEL, TIMEOUT } from "../lib/util";
+import { fetchData, isFiniteNumber, LOGLEVEL, TIMEOUT } from "../lib/util";
 import { logger } from "../lib/logger";
 
 const log = logger(LOGLEVEL, "esplora");
@@ -58,6 +58,12 @@ export class EsploraProvider implements Provider {
       data,
       maxDepth,
     );
+
+    const estimates = Object.values(feeEstimates);
+    if (estimates.length === 0 || !estimates.every(isFiniteNumber)) {
+      throw new Error("Invalid fee data");
+    }
+
     return feeEstimates;
   }
 
@@ -115,6 +121,10 @@ export class EsploraProvider implements Provider {
     );
 
     const feeRates = Object.values(data);
+    if (feeRates.length === 0 || !feeRates.every(isFiniteNumber)) {
+      throw new Error("Invalid fee data");
+    }
+
     // Currently the Esplora API does not provide a minimum relay fee rate
     // so we return the minimum fee rate from the fee estimates
     return Math.min(...feeRates);
